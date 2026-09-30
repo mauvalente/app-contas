@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minhas Contas</title>
+<meta name="description" content="Registro de pagamentos e recebimentos no Google Sheets">
+<meta name="theme-color" content="#0f766e" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1412" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Contas">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f4f6f5; --surface:#ffffff; --surface-2:#eef2f1; --text:#14201d; --muted:#65736f;
+  --border:#dde4e2; --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:#d8efec;
+  --in:#15803d; --in-soft:#dcf3e3; --out:#c2410c; --out-soft:#fbe6dc;
+  --shadow:0 1px 2px rgba(16,24,22,.06),0 4px 14px rgba(16,24,22,.06);
+  --radius:16px; --foot:68px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b1412; --surface:#132220; --surface-2:#1a2d2a; --text:#e6efed; --muted:#93a6a1;
+    --border:#243a36; --accent:#2dd4bf; --accent-ink:#062a26; --accent-soft:#12352f;
+    --in:#4ade80; --in-soft:#133524; --out:#fb923c; --out-soft:#3a2214;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- header ---------- */
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 14px) 16px 10px;display:flex;align-items:center;gap:12px}
+header.top h1{font-size:22px;margin:0;flex:1;letter-spacing:-.01em}
+.icon-btn{width:40px;height:40px;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;color:var(--muted)}
+.icon-btn:active{background:var(--surface-2)}
+.icon-btn svg{width:22px;height:22px}
+.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+main{padding:0 16px calc(var(--foot) + env(safe-area-inset-bottom) + 24px);max-width:640px;margin:0 auto}
+.screen{display:none}
+.screen.active{display:block}
+
+/* ---------- month cards ---------- */
+.month{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden;border:1px solid var(--border)}
+.month-head{width:100%;border:0;background:transparent;padding:14px 16px;display:block;text-align:left}
+.mh-top{display:flex;align-items:center;gap:10px}
+.mh-title{font-weight:650;font-size:17px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mh-total{font-weight:700;font-size:19px;white-space:nowrap}
+.mh-sub{display:flex;justify-content:space-between;gap:10px;margin-top:2px;padding-right:30px;font-size:13px;color:var(--muted)}
+.mh-split{white-space:nowrap}
+.mh-split .i{color:var(--in)} .mh-split .o{color:var(--out)}
+.pos{color:var(--in)} .neg{color:var(--out)}
+.chev{width:20px;height:20px;color:var(--muted);transition:transform .2s;flex:none}
+.month.open .chev{transform:rotate(180deg)}
+.rows{list-style:none;margin:0;padding:0 8px 8px;border-top:1px solid var(--border)}
+.row{display:flex;gap:12px;align-items:flex-start;padding:12px 8px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:10px}
+.row:active{background:var(--surface-2)}
+.row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.row:last-child{border-bottom:0}
+.badge{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;margin-top:2px}
+.badge svg{width:18px;height:18px}
+.badge.in{background:var(--in-soft);color:var(--in)}
+.badge.out{background:var(--out-soft);color:var(--out)}
+.row-mid{flex:1;min-width:0}
+.row-desc{word-wrap:break-word;white-space:normal}
+.row-meta{font-size:13px;color:var(--muted);margin-top:4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{background:var(--surface-2);border-radius:999px;padding:1px 8px;font-size:12px;color:var(--text)}
+.pending{color:var(--out);font-size:12px}
+.row-val{font-weight:650;white-space:nowrap;margin-top:2px}
+
+.empty{text-align:center;color:var(--muted);padding:56px 24px}
+.empty svg{width:48px;height:48px;opacity:.5;margin-bottom:8px}
+.empty button{margin-top:16px}
+
+/* ---------- forms ---------- */
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:16px}
+.field{margin-bottom:18px;position:relative}
+.field:last-child{margin-bottom:0}
+label.lbl,.lbl{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.opt{font-weight:400;text-transform:none;letter-spacing:0}
+.input{width:100%;min-height:48px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--bg);outline:none;font-size:16px}
+.input:focus,.editor:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input[type=date].input{appearance:none;-webkit-appearance:none;display:block}
+.valor{font-size:24px;font-weight:700;text-align:right}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:12px;border:1px solid var(--border);background:var(--bg);font-weight:600;color:var(--muted)}
+.seg label svg{width:18px;height:18px}
+.seg input:checked + label.out{background:var(--out-soft);border-color:var(--out);color:var(--out)}
+.seg input:checked + label.in{background:var(--in-soft);border-color:var(--in);color:var(--in)}
+.seg input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
+
+.toolbar{display:flex;gap:6px;margin-bottom:6px}
+.tb{min-width:40px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:16px}
+.tb.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.editor{min-height:120px;max-height:40vh;overflow:auto;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--bg);outline:none;white-space:pre-wrap;word-wrap:break-word}
+.editor:empty::before{content:attr(data-placeholder);color:var(--muted)}
+.emoji-panel{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:8px;margin-bottom:6px;background:var(--surface-2);border-radius:12px}
+.emoji-panel button{border:0;background:transparent;font-size:22px;height:40px;border-radius:8px}
+.emoji-panel button:active{background:var(--border)}
+
+.combo-list{position:absolute;left:0;right:0;top:100%;margin:4px 0 0;padding:4px;list-style:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:220px;overflow:auto;z-index:10}
+.combo-list li{padding:12px;border-radius:8px;cursor:pointer}
+.combo-list li[aria-selected=true],.combo-list li:active{background:var(--surface-2)}
+.combo-list li.new{color:var(--accent);font-weight:600}
+
+.actions{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:18px}
+.btn{min-height:50px;border-radius:14px;border:1px solid var(--border);background:var(--surface);font-weight:650;padding:0 18px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.6}
+.btn.danger{width:100%;margin-top:10px;background:transparent;color:var(--out);border-color:var(--out-soft)}
+.btn.danger.armed{background:var(--out);border-color:var(--out);color:#fff}
+.btn.small{min-height:40px;font-size:14px;border-radius:10px}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+.hist{list-style:none;padding:0;margin:0}
+.hist li{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;background:var(--bg);margin-bottom:8px;padding-left:12px}
+.hist .use{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:10px 0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl}
+.hist .use.current{color:var(--accent);font-weight:600}
+.hist .x{width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px;border-radius:10px}
+.hint{font-size:13px;color:var(--muted);margin:6px 0 0}
+.section-title{font-size:15px;font-weight:650;margin:22px 0 10px}
+
+/* ---------- footer ---------- */
+footer.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;height:calc(var(--foot) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+.nav{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);height:100%;justify-content:center}
+.nav svg{width:24px;height:24px}
+.nav.active{color:var(--accent)}
+.fab{width:60px;height:60px;border-radius:20px;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;margin-top:-26px;box-shadow:0 6px 18px rgba(15,118,110,.35)}
+.fab svg{width:30px;height:30px}
+body.form-mode footer.bar{display:none}
+body.login-mode .fab,body.login-mode #nav-home{visibility:hidden}
+.login{text-align:center;padding:32px 20px;margin-top:8vh}
+.login .logo{width:72px;height:72px;border-radius:20px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;margin:0 auto 16px;font-weight:800;font-size:26px}
+.login h2{margin:0 0 6px;font-size:20px}
+.login p{margin:0 0 22px;color:var(--muted)}
+#gbtn{display:flex;justify-content:center;min-height:44px}
+#login-msg{margin-top:16px;color:var(--out)}
+.account{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
+.account .who{flex:1;min-width:0}
+.account .who b{display:block}
+.account .who span{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+body.form-mode main{padding-bottom:calc(env(safe-area-inset-bottom) + 24px)}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--foot) + env(safe-area-inset-bottom) + 16px);transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:12px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:20;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+body.form-mode .toast{bottom:24px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1 id="title">Minhas Contas</h1>
+  <button class="icon-btn" id="btn-sync" aria-label="Atualizar da planilha" title="Atualizar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+  </button>
+</header>
+
+<main>
+  <!-- ============ HOME ============ -->
+  <section class="screen active" id="screen-home" aria-label="Registros">
+    <div id="list"></div>
+  </section>
+
+  <!-- ============ LOGIN ============ -->
+  <section class="screen" id="screen-login" aria-label="Entrar">
+    <div class="card login">
+      <div class="logo">R$</div>
+      <h2>Entre para continuar</h2>
+      <p>Use sua conta Google. Só os e-mails autorizados na planilha têm acesso.</p>
+      <div id="gbtn"></div>
+      <div id="login-msg" class="hint"></div>
+    </div>
+  </section>
+
+  <!-- ============ NOVO REGISTRO ============ -->
+  <section class="screen" id="screen-form" aria-label="Novo registro">
+    <form id="form" class="card" novalidate autocomplete="off">
+      <div class="field">
+        <label class="lbl" for="f-data">Data</label>
+        <input class="input" type="date" id="f-data" required>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Tipo</span>
+        <div class="seg" role="radiogroup" aria-label="Tipo">
+          <input type="radio" name="tipo" id="t-out" value="pagamento" checked>
+          <label for="t-out" class="out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>Pagamento</label>
+          <input type="radio" name="tipo" id="t-in" value="recebimento">
+          <label for="t-in" class="in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17M15 17H7V9"/></svg>Recebimento</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="f-valor">Valor</label>
+        <input class="input valor num" id="f-valor" inputmode="numeric" placeholder="R$ 0,00" value="">
+      </div>
+
+      <div class="field">
+        <span class="lbl" id="lbl-desc">Descrição</span>
+        <div class="toolbar">
+          <button type="button" class="tb" data-cmd="bold" aria-label="Negrito"><b>B</b></button>
+          <button type="button" class="tb" data-cmd="italic" aria-label="Itálico"><i>I</i></button>
+          <button type="button" class="tb" id="btn-emoji" aria-label="Emojis" aria-expanded="false">😊</button>
+        </div>
+        <div class="emoji-panel hidden" id="emoji-panel"></div>
+        <div class="editor" id="f-desc" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="lbl-desc" data-placeholder="O que foi pago ou recebido?"></div>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="f-cat">Categoria <span class="opt">(opcional)</span></label>
+        <input class="input" id="f-cat" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cat-list" placeholder="Digite ou escolha" autocomplete="off" autocapitalize="sentences">
+        <ul class="combo-list hidden" id="cat-list" role="listbox"></ul>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" id="btn-cancel">Cancelar</button>
+        <button type="submit" class="btn primary" id="btn-save">Salvar</button>
+      </div>
+      <button type="button" class="btn danger hidden" id="btn-delete">Excluir registro</button>
+    </form>
+  </section>
+
+  <!-- ============ CONFIGURAÇÕES ============ -->
+  <section class="screen" id="screen-config" aria-label="Configurações">
+    <div class="card account-card hidden" id="account-card" style="margin-bottom:12px">
+      <div class="account">
+        <div class="avatar" id="acc-avatar"></div>
+        <div class="who"><b id="acc-nome"></b><span id="acc-email"></span></div>
+      </div>
+      <button type="button" class="btn small" id="btn-logout" style="width:100%">Sair desta conta</button>
+    </div>
+
+    <form id="cfg-form" class="card" novalidate>
+      <div class="field">
+        <label class="lbl" for="c-url">URL do Google Sheets (Apps Script)</label>
+        <input class="input" type="url" id="c-url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </div>
+      <div class="row-btns">
+        <button type="submit" class="btn primary small">Salvar</button>
+        <button type="button" class="btn small" id="btn-test">Testar conexão</button>
+      </div>
+    </form>
+
+    <h2 class="section-title">URLs já utilizadas</h2>
+    <ul class="hist" id="hist"></ul>
+    <p class="hint" id="hist-empty">Nenhuma ainda. Ao salvar uma URL ela aparece aqui para reutilizar. O ✕ remove só deste aparelho.</p>
+
+    <h2 class="section-title">Sincronização</h2>
+    <div class="card">
+      <div id="sync-info" class="hint" style="margin:0"></div>
+      <div class="row-btns">
+        <button type="button" class="btn small" id="btn-flush">Enviar pendentes agora</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="bar">
+  <button class="nav active" id="nav-home" aria-label="Registros">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M8 14h4M8 17h7"/></svg>
+    Registros
+  </button>
+  <button class="fab" id="nav-add" aria-label="Adicionar conta">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+  <button class="nav" id="nav-config" aria-label="Configurações">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Ajustes
+  </button>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= storage ================= */
+const K = { cfg:'contas.config', hist:'contas.urlHistory', recs:'contas.records', pend:'contas.pending', sess:'contas.session' };
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+};
+let cfg = { url: store.get(K.cfg, {}).url || '' };
+let urlHist = store.get(K.hist, []);
+// sessão: {key, email, nome} — chave emitida pelo script depois do login com Google
+let session = store.get(K.sess, null);
+let records = [];
+// fila de alterações ainda não enviadas: {op:'add'|'update'|'delete', record, email}
+let queue = store.get(K.pend, []).map(q => q.op ? q : { op:'add', record:q });
+const recsKey = () => K.recs + '.' + (session ? session.email : '');
+const myQueue = () => session ? queue.filter(q => q.email === session.email) : [];
+function loadUserData(){
+  if (session) {
+    // alterações feitas antes do login passam a ser de quem entrou
+    queue.forEach(q => { if (!q.email) q.email = session.email; });
+    saveQueue();
+  }
+  records = session ? store.get(recsKey(), []) : [];
+  firstRender = true; openMonths.clear();
+}
+function saveRecords(){ if (session) store.set(recsKey(), records); }
+const openMonths = new Set();
+let firstRender = true;
+
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const brl = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
+const pad = n => String(n).padStart(2, '0');
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const fmtDay = iso => { const [, m, d] = iso.split('-'); return `${d}/${m}`; };
+const monthLabel = key => {
+  const [y, m] = key.split('-').map(Number);
+  const name = new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month:'long' });
+  return name.charAt(0).toUpperCase() + name.slice(1) + ' ' + y;
+};
+
+// Markdown simples: *negrito*  _itálico_
+function mdToHtml(md){
+  return esc(md)
+    .replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^\w])_([^_\n]+)_(?!\w)/g, '$1<em>$2</em>')
+    .replace(/\n/g, '<br>');
+}
+function wrap(inner, mark){
+  const m = inner.match(/^(\s*)([\s\S]*?)(\s*)$/);
+  return m[2] ? m[1] + mark + m[2] + mark + m[3] : inner;
+}
+function editorToMd(node){
+  let out = '';
+  node.childNodes.forEach((n, i) => {
+    if (n.nodeType === 3) { out += n.nodeValue.replace(/ /g, ' '); return; }
+    if (n.nodeType !== 1) return;
+    const tag = n.tagName;
+    if (tag === 'BR') { out += '\n'; return; }
+    let inner = editorToMd(n);
+    const st = n.style || {};
+    const bold = tag === 'B' || tag === 'STRONG' || /^(bold|[6-9]00)$/.test(st.fontWeight || '');
+    const ital = tag === 'I' || tag === 'EM' || st.fontStyle === 'italic';
+    if (ital) inner = wrap(inner, '_');
+    if (bold) inner = wrap(inner, '*');
+    if ((tag === 'DIV' || tag === 'P') && i > 0 && !out.endsWith('\n')) out += '\n';
+    out += inner;
+  });
+  return out;
+}
+
+let toastT;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ================= API ================= */
+async function net(url, opts){
+  try { return await fetch(url, opts); }
+  catch { const e = new Error('Sem conexão com a planilha'); e.offline = true; throw e; }
+}
+class AuthError extends Error {}
+async function api(action, extra){
+  if (!cfg.url) throw new Error('Configure a URL da planilha na engrenagem');
+  // tudo via POST: a chave nunca vai na URL. text/plain evita o preflight de CORS.
+  const res = await net(cfg.url, {
+    method:'POST', redirect:'follow',
+    headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ action, session: session ? session.key : undefined }, extra))
+  });
+  let data;
+  try { data = await res.json(); } catch { throw new Error('Resposta inválida da planilha. Confira a URL e se o script está publicado para "Qualquer pessoa".'); }
+  if (data.code === 'auth') {
+    if (action !== 'login') sessionLost();
+    throw new AuthError(data.error || 'Entre novamente');
+  }
+  if (!data.ok) throw new Error(data.error || 'Erro na planilha');
+  return data;
+}
+
+let syncing = false;
+async function sync({ silent } = {}){
+  if (!cfg.url || !session || syncing) return;
+  syncing = true; $('#btn-sync').classList.add('spin');
+  try {
+    await flush();
+    const data = await api('list');
+    records = data.records || [];
+    if (data.user) { session.nome = data.user.nome; store.set(K.sess, session); }
+    saveRecords();
+    render();
+    if (!silent) toast('Atualizado');
+  } catch (e) {
+    if (e instanceof AuthError) toast(e.message);
+    else if (!silent || !navigator.onLine) toast(navigator.onLine ? e.message : 'Sem conexão — mostrando dados salvos');
+  } finally {
+    syncing = false; $('#btn-sync').classList.remove('spin'); renderSyncInfo();
+  }
+}
+
+function applyOps(base, ops, mark){
+  let arr = base.slice();
+  for (const q of ops) {
+    const r = q.record;
+    if (q.op === 'delete') { arr = arr.filter(x => x.id !== r.id); continue; }
+    const v = mark ? { ...r, _pending:true } : r;
+    const i = arr.findIndex(x => x.id === r.id);
+    if (i >= 0) arr[i] = v; else arr.push(v);
+  }
+  return arr;
+}
+function saveQueue(){ store.set(K.pend, queue); }
+function enqueue(op, rec){
+  const email = session.email;
+  const mine = q => q.email === email && q.record.id === rec.id;
+  if (op === 'delete') {
+    const onlyLocal = queue.some(q => mine(q) && q.op === 'add');
+    queue = queue.filter(q => !mine(q));
+    if (!onlyLocal) queue.push({ op:'delete', record:{ id: rec.id }, email });
+  } else if (op === 'update') {
+    const i = queue.findIndex(q => mine(q) && q.op !== 'delete');
+    if (i >= 0) queue[i] = { op: queue[i].op, record: rec, email }; // o servidor faz "upsert", então add ou update tanto faz
+    else queue.push({ op:'update', record: rec, email });
+  } else queue.push({ op:'add', record: rec, email });
+  saveQueue();
+}
+
+let flushing = null;
+function flush(){
+  if (!cfg.url || !session || !myQueue().length) return Promise.resolve();
+  return flushing || (flushing = (async () => {
+    try {
+      let q;
+      while (session && (q = myQueue()[0])) {
+        await api(q.op, { record: q.record });
+        records = applyOps(records, [q], false);
+        queue = queue.filter(x => x !== q);
+        saveRecords(); saveQueue();
+      }
+    } finally { flushing = null; }
+  })());
+}
+
+/* ================= HOME ================= */
+const IC_IN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17M15 17H7V9"/></svg>';
+const IC_OUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>';
+const IC_CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+
+function allRecords(){ return applyOps(records, myQueue(), true); }
+function findRecord(id){ return allRecords().find(r => r.id === id); }
+
+function render(){
+  const list = $('#list');
+  const all = allRecords();
+
+  if (!all.length) {
+    list.innerHTML = cfg.url
+      ? `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/></svg><div>Nenhum registro ainda.<br>Toque em <b>+</b> para adicionar o primeiro.</div></div>`
+      : `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><div>Conecte sua planilha do Google para começar.</div><button class="btn primary small" id="go-config">Configurar URL</button></div>`;
+    const g = $('#go-config'); if (g) g.onclick = () => go('#/config');
+    return;
+  }
+
+  const groups = new Map();
+  all.forEach(r => {
+    const key = (r.data || '').slice(0, 7);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  });
+  const keys = [...groups.keys()].sort().reverse();
+  if (firstRender) { openMonths.add(keys[0]); firstRender = false; }
+
+  list.innerHTML = keys.map(key => {
+    const items = groups.get(key).sort((a, b) => b.data.localeCompare(a.data));
+    let ent = 0, sai = 0;
+    items.forEach(r => r.tipo === 'recebimento' ? ent += +r.valor : sai += +r.valor);
+    const saldo = ent - sai;
+    const open = openMonths.has(key);
+    return `<section class="month${open ? ' open' : ''}" data-key="${key}">
+      <button class="month-head" aria-expanded="${open}">
+        <div class="mh-top"><span class="mh-title">${monthLabel(key)}</span><span class="mh-total num ${saldo >= 0 ? 'pos' : 'neg'}">${brl.format(saldo)}</span>${IC_CHEV}</div>
+        <div class="mh-sub"><span>${items.length} ${items.length === 1 ? 'registro' : 'registros'}</span><span class="mh-split num"><span class="i">+${brl.format(ent)}</span> · <span class="o">−${brl.format(sai)}</span></span></div>
+      </button>
+      <ul class="rows"${open ? '' : ' hidden'}>
+        ${items.map(r => {
+          const inn = r.tipo === 'recebimento';
+          return `<li class="row" data-id="${esc(r.id)}" tabindex="0" role="button" aria-label="Editar registro">
+            <span class="badge ${inn ? 'in' : 'out'}" title="${inn ? 'Recebimento' : 'Pagamento'}">${inn ? IC_IN : IC_OUT}</span>
+            <div class="row-mid">
+              <div class="row-desc">${mdToHtml(r.descricao || '')}</div>
+              <div class="row-meta"><span class="num">${fmtDay(r.data)}</span>${r.categoria ? `<span class="chip">${esc(r.categoria)}</span>` : ''}${r._pending ? '<span class="pending">● aguardando envio</span>' : ''}</div>
+            </div>
+            <span class="row-val num ${inn ? 'pos' : 'neg'}">${inn ? '+' : '−'}${brl.format(+r.valor)}</span>
+          </li>`;
+        }).join('')}
+      </ul>
+    </section>`;
+  }).join('');
+}
+
+$('#list').addEventListener('click', e => {
+  const row = e.target.closest('.row');
+  if (row) return go('#/editar/' + encodeURIComponent(row.dataset.id));
+  const head = e.target.closest('.month-head'); if (!head) return;
+  const sec = head.parentElement, key = sec.dataset.key;
+  const open = !sec.classList.contains('open');
+  sec.classList.toggle('open', open);
+  head.setAttribute('aria-expanded', open);
+  sec.querySelector('.rows').hidden = !open;
+  open ? openMonths.add(key) : openMonths.delete(key);
+});
+
+$('#list').addEventListener('keydown', e => {
+  const row = e.target.closest('.row');
+  if (row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); row.click(); }
+});
+
+/* ================= FORM ================= */
+const fData = $('#f-data'), fValor = $('#f-valor'), fDesc = $('#f-desc'), fCat = $('#f-cat'), catList = $('#cat-list');
+let cents = 0, editingId = null;
+
+function resetForm(){
+  fData.value = todayISO();
+  $('#t-out').checked = true;
+  cents = 0; fValor.value = '';
+  fDesc.innerHTML = '';
+  fCat.value = '';
+  $('#emoji-panel').classList.add('hidden');
+  closeCombo();
+  editingId = null;
+  $('#btn-delete').classList.add('hidden');
+  disarmDelete();
+}
+function fillForm(r){
+  editingId = r.id;
+  fData.value = r.data;
+  (r.tipo === 'recebimento' ? $('#t-in') : $('#t-out')).checked = true;
+  cents = Math.round(+r.valor * 100);
+  fValor.value = cents ? brl.format(cents / 100) : '';
+  fDesc.innerHTML = mdToHtml(r.descricao || '');
+  fCat.value = r.categoria || '';
+  $('#btn-delete').classList.remove('hidden');
+}
+
+// calendário ao tocar na data
+fData.addEventListener('click', () => { try { fData.showPicker(); } catch {} });
+
+// valor: digita só números, preenche da direita (centavos)
+fValor.addEventListener('input', () => {
+  const digits = fValor.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 12);
+  cents = digits ? parseInt(digits, 10) : 0;
+  fValor.value = cents ? brl.format(cents / 100) : '';
+});
+
+// editor rico
+let savedRange = null;
+document.addEventListener('selectionchange', () => {
+  const sel = document.getSelection();
+  if (sel.rangeCount && fDesc.contains(sel.anchorNode)) {
+    savedRange = sel.getRangeAt(0).cloneRange();
+    document.querySelectorAll('.tb[data-cmd]').forEach(b => b.classList.toggle('active', document.queryCommandState(b.dataset.cmd)));
+  }
+});
+function restoreRange(){
+  fDesc.focus();
+  if (savedRange) { const s = document.getSelection(); s.removeAllRanges(); s.addRange(savedRange); }
+}
+document.querySelectorAll('.toolbar .tb').forEach(b => b.addEventListener('pointerdown', e => e.preventDefault()));
+document.querySelectorAll('.tb[data-cmd]').forEach(b => b.addEventListener('click', () => {
+  restoreRange();
+  document.execCommand('styleWithCSS', false, false);
+  document.execCommand(b.dataset.cmd);
+  b.classList.toggle('active', document.queryCommandState(b.dataset.cmd));
+}));
+fDesc.addEventListener('paste', e => {
+  e.preventDefault();
+  document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text/plain'));
+});
+
+const EMOJIS = '💰 💵 💳 🏦 🧾 📈 📉 🛒 🍔 ☕ 🍕 🍺 🏠 💡 💧 🔥 📱 🌐 🚗 ⛽ 🚌 ✈️ 🏥 💊 🎓 📚 🎁 🎉 👕 💇 🐶 🛠️ ⚽ 🎮 🎬 🎵 ✅ ❌ ⚠️ ⭐ ❤️ 😊 😅 🙏 👍 👀 📌 🗓️'.split(' ');
+const ep = $('#emoji-panel');
+ep.innerHTML = EMOJIS.map(e => `<button type="button" aria-label="${e}">${e}</button>`).join('');
+ep.addEventListener('pointerdown', e => e.preventDefault());
+ep.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  restoreRange();
+  document.execCommand('insertText', false, b.textContent);
+});
+$('#btn-emoji').addEventListener('click', () => {
+  const hidden = ep.classList.toggle('hidden');
+  $('#btn-emoji').setAttribute('aria-expanded', !hidden);
+  $('#btn-emoji').classList.toggle('active', !hidden);
+});
+
+// categoria: digitar nova ou escolher existente no mesmo campo
+let comboIdx = -1;
+function categories(){
+  const m = new Map();
+  allRecords().forEach(r => { const c = (r.categoria || '').trim(); if (c && !m.has(norm(c))) m.set(norm(c), c); });
+  return [...m.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+function openCombo(){
+  const q = fCat.value.trim(), nq = norm(q);
+  const cats = categories().filter(c => !nq || norm(c).includes(nq));
+  const exact = categories().some(c => norm(c) === nq);
+  const items = [];
+  if (q && !exact) items.push({ v:q, html:`+ Nova categoria: “${esc(q)}”`, cls:'new' });
+  cats.forEach(c => items.push({ v:c, html:esc(c) }));
+  if (!items.length) return closeCombo();
+  comboIdx = -1;
+  catList.innerHTML = items.map((it, i) => `<li role="option" id="opt-${i}" data-v="${esc(it.v)}" class="${it.cls || ''}">${it.html}</li>`).join('');
+  catList.classList.remove('hidden'); fCat.setAttribute('aria-expanded', 'true');
+}
+function closeCombo(){ catList.classList.add('hidden'); fCat.setAttribute('aria-expanded', 'false'); comboIdx = -1; }
+fCat.addEventListener('focus', openCombo);
+fCat.addEventListener('input', openCombo);
+fCat.addEventListener('blur', () => setTimeout(closeCombo, 120));
+fCat.addEventListener('keydown', e => {
+  const opts = [...catList.children];
+  if (catList.classList.contains('hidden') || !opts.length) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    comboIdx = (comboIdx + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length;
+    opts.forEach((o, i) => o.setAttribute('aria-selected', i === comboIdx));
+    fCat.setAttribute('aria-activedescendant', opts[comboIdx].id);
+  } else if (e.key === 'Enter' && comboIdx >= 0) {
+    e.preventDefault(); fCat.value = opts[comboIdx].dataset.v; closeCombo();
+  } else if (e.key === 'Escape') closeCombo();
+});
+catList.addEventListener('pointerdown', e => e.preventDefault());
+catList.addEventListener('click', e => {
+  const li = e.target.closest('li'); if (!li) return;
+  fCat.value = li.dataset.v; closeCombo(); fCat.blur();
+});
+
+$('#btn-cancel').addEventListener('click', () => back());
+
+$('#form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const descricao = editorToMd(fDesc).replace(/\n{3,}/g, '\n\n').trim();
+  if (!fData.value) return toast('Informe a data');
+  if (!cents) { fValor.focus(); return toast('Informe o valor'); }
+  if (!descricao) { fDesc.focus(); return toast('Escreva uma descrição'); }
+
+  // reaproveita a grafia de uma categoria existente (ex.: "mercado" → "Mercado")
+  let categoria = fCat.value.trim();
+  const found = categories().find(c => norm(c) === norm(categoria));
+  if (found) categoria = found;
+
+  const isEdit = !!editingId;
+  const rec = {
+    id: editingId || uid(), data: fData.value, descricao,
+    tipo: document.querySelector('input[name=tipo]:checked').value,
+    categoria, valor: cents / 100
+  };
+  enqueue(isEdit ? 'update' : 'add', rec);
+  openMonths.add(rec.data.slice(0, 7));
+  render();
+  back();
+  sendNow(isEdit ? 'Alteração salva na planilha ✓' : 'Salvo na planilha ✓');
+});
+
+async function sendNow(okMsg){
+  if (!cfg.url) return toast('Salvo no aparelho. Configure a URL para enviar à planilha.');
+  try { await flush(); render(); toast(okMsg); }
+  catch (err) {
+    render();
+    toast(err instanceof AuthError ? 'Guardado no aparelho. Entre de novo para enviar.'
+      : err.offline || !navigator.onLine ? 'Sem conexão — fica pendente e será enviado depois' : 'Não enviado: ' + err.message);
+  }
+  finally { renderSyncInfo(); }
+}
+
+// excluir: primeiro toque arma, segundo confirma
+let delTimer;
+function disarmDelete(){
+  clearTimeout(delTimer);
+  const b = $('#btn-delete'); b.classList.remove('armed'); b.textContent = 'Excluir registro';
+}
+$('#btn-delete').addEventListener('click', () => {
+  const b = $('#btn-delete');
+  if (!b.classList.contains('armed')) {
+    b.classList.add('armed'); b.textContent = 'Toque de novo para confirmar';
+    delTimer = setTimeout(disarmDelete, 3500);
+    return;
+  }
+  const id = editingId;
+  disarmDelete();
+  enqueue('delete', { id });
+  render();
+  back();
+  sendNow('Registro excluído ✓');
+});
+
+/* ================= CONFIG ================= */
+function renderConfig(){
+  $('#c-url').value = cfg.url || '';
+  const card = $('#account-card');
+  card.classList.toggle('hidden', !session);
+  if (session) {
+    $('#acc-nome').textContent = session.nome || session.email;
+    $('#acc-email').textContent = session.email;
+    $('#acc-avatar').textContent = (session.nome || session.email).charAt(0).toUpperCase();
+  }
+  renderHist(); renderSyncInfo();
+}
+function renderHist(){
+  const ul = $('#hist');
+  ul.innerHTML = urlHist.map((u, i) => `<li>
+    <button type="button" class="use${u === cfg.url ? ' current' : ''}" data-i="${i}" title="${esc(u)}"><bdi>${esc(u)}</bdi></button>
+    <button type="button" class="x" data-x="${i}" aria-label="Remover esta URL do aparelho">✕</button></li>`).join('');
+  $('#hist-empty').classList.toggle('hidden', urlHist.length > 0);
+}
+function renderSyncInfo(){
+  const el = $('#sync-info'); if (!el) return;
+  const n = myQueue().length;
+  el.textContent = `${records.length} registro(s) da planilha no aparelho · ${n} alteração(ões) pendente(s) de envio`;
+  $('#btn-flush').disabled = !n;
+}
+$('#hist').addEventListener('click', e => {
+  const x = e.target.closest('[data-x]');
+  if (x) { urlHist.splice(+x.dataset.x, 1); store.set(K.hist, urlHist); renderHist(); return; }
+  const u = e.target.closest('[data-i]');
+  if (u) { $('#c-url').value = urlHist[+u.dataset.i]; $('#c-url').focus(); }
+});
+$('#cfg-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const url = $('#c-url').value.trim();
+  if (url && !/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) return toast('A URL deve começar com https://script.google.com/');
+  const changed = url !== cfg.url;
+  if (changed && myQueue().length) return toast('Há alterações não enviadas. Conecte-se à internet e envie antes de trocar a URL.');
+  cfg = { url };
+  store.set(K.cfg, cfg);
+  if (url) { urlHist = [url, ...urlHist.filter(u => u !== url)].slice(0, 10); store.set(K.hist, urlHist); }
+  // a sessão pertence ao script: trocou a URL, entra de novo
+  if (changed) { session = null; store.set(K.sess, null); gsiReady = null; loadUserData(); }
+  renderConfig(); render();
+  toast('Configuração salva');
+  if (changed && url) go('#/');
+});
+$('#btn-test').addEventListener('click', async () => {
+  const prev = cfg;
+  cfg = { url: $('#c-url').value.trim() };
+  try { const d = await api('config'); toast(d.clientId ? 'Conectado ✓' : 'Script respondeu, mas sem login configurado'); }
+  catch (e) { toast('Falhou: ' + e.message); }
+  finally { cfg = prev; }
+});
+$('#btn-logout').addEventListener('click', async () => {
+  if (myQueue().length) return toast('Há alterações não enviadas. Conecte-se à internet e envie antes de sair.');
+  const key = session && session.key;
+  try { if (key) await api('logout'); } catch {}
+  try { window.google && google.accounts.id.disableAutoSelect(); } catch {}
+  session = null; store.set(K.sess, null); loadUserData(); render();
+  toast('Você saiu');
+  location.replace('#/');
+});
+
+/* ================= LOGIN ================= */
+function sessionLost(){
+  session = null; store.set(K.sess, null); loadUserData(); render();
+  if (location.hash !== '#/config') location.replace('#/');
+  route();
+}
+function loadScript(src){
+  return new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true; s.onload = ok; s.onerror = () => fail(new Error('Não foi possível carregar o login do Google. Verifique a internet.'));
+    document.head.appendChild(s);
+  });
+}
+let gsiReady = null;
+async function showLogin(){
+  const msg = $('#login-msg'); msg.textContent = '';
+  try {
+    if (!gsiReady) gsiReady = (async () => {
+      const [{ clientId }] = await Promise.all([api('config'), window.google?.accounts?.id ? null : loadScript('https://accounts.google.com/gsi/client')]);
+      if (!clientId || /^COLE-AQUI/.test(clientId)) throw new Error('Falta preencher o CLIENT_ID no script da planilha.');
+      google.accounts.id.initialize({ client_id: clientId, callback: onGoogleCredential, auto_select: false, cancel_on_tap_outside: true });
+    })();
+    await gsiReady;
+    const el = $('#gbtn'); el.innerHTML = '';
+    google.accounts.id.renderButton(el, { type:'standard', theme:'outline', size:'large', text:'signin_with', shape:'pill', locale:'pt-BR', width: 280 });
+  } catch (e) {
+    gsiReady = null;
+    msg.textContent = e.offline ? 'Sem conexão. Conecte-se à internet para entrar.' : e.message;
+  }
+}
+async function onGoogleCredential(resp){
+  const msg = $('#login-msg'); msg.textContent = 'Entrando…';
+  try {
+    const d = await api('login', { credential: resp.credential });
+    session = { key: d.session, email: d.user.email, nome: d.user.nome };
+    store.set(K.sess, session);
+    loadUserData(); render();
+    msg.textContent = '';
+    toast('Olá, ' + session.nome + '!');
+    location.replace('#/'); route();
+    sync({ silent:true });
+  } catch (e) {
+    msg.textContent = e.message;
+  }
+}
+
+$('#btn-flush').addEventListener('click', async () => {
+  try { await flush(); render(); toast('Pendentes enviados ✓'); }
+  catch (e) { toast('Falhou: ' + e.message); }
+  renderSyncInfo();
+});
+
+/* ================= navegação ================= */
+let inAppNav = false;
+function go(hash){ inAppNav = true; location.hash = hash; }
+function back(){ if (inAppNav && history.length > 1) { inAppNav = false; history.back(); } else location.replace('#/'); }
+
+function route(){
+  const h = location.hash;
+  const editId = h.startsWith('#/editar/') ? decodeURIComponent(h.slice(9)) : null;
+  let scr = (h === '#/novo' || editId) ? 'form' : h === '#/config' ? 'config' : 'home';
+  if (scr !== 'config' && cfg.url && !session) scr = 'login';
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + scr));
+  document.body.classList.toggle('form-mode', scr === 'form');
+  document.body.classList.toggle('login-mode', scr === 'login');
+  $('#nav-home').classList.toggle('active', scr === 'home');
+  $('#nav-config').classList.toggle('active', scr === 'config');
+  $('#title').textContent = scr === 'form' ? (editId ? 'Editar conta' : 'Nova conta') : scr === 'config' ? 'Ajustes' : 'Minhas Contas';
+  if (scr === 'login') showLogin();
+  $('#btn-sync').classList.toggle('hidden', scr !== 'home');
+  if (scr === 'form') {
+    resetForm();
+    if (editId) {
+      const r = findRecord(editId);
+      if (r) fillForm(r);
+      else { toast('Registro não encontrado'); location.replace('#/'); return; }
+    }
+  }
+  if (scr === 'config') renderConfig();
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', route);
+$('#nav-home').onclick = () => location.hash === '#/config' ? (inAppNav ? back() : location.replace('#/')) : null;
+$('#nav-add').onclick = () => go('#/novo');
+$('#nav-config').onclick = () => location.hash !== '#/config' && go('#/config');
+$('#btn-sync').onclick = () => !cfg.url ? go('#/config') : session ? sync() : route();
+
+window.addEventListener('online', () => sync({ silent:true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sync({ silent:true }); });
+
+/* ================= start ================= */
+loadUserData(); render(); route(); sync({ silent:true });
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+})();
+</script>
+</body>
+</html>
