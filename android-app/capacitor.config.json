@@ -1,0 +1,17 @@
+{
+  "appId": "br.app.minhascontas",
+  "appName": "Minhas Contas",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#f4f6f5"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_contas",
+      "iconColor": "#0f766e"
+    },
+    "SocialLogin": {
+      "providers": { "google": true, "facebook": false, "apple": false, "twitter": false }
+    }
+  }
+}

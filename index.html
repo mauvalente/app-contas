@@ -19,6 +19,7 @@
   --bg:#f4f6f5; --surface:#ffffff; --surface-2:#eef2f1; --text:#14201d; --muted:#65736f;
   --border:#dde4e2; --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:#d8efec;
   --in:#15803d; --in-soft:#dcf3e3; --out:#c2410c; --out-soft:#fbe6dc;
+  --warn:#b45309; --warn-soft:#fdf0d5;
   --shadow:0 1px 2px rgba(16,24,22,.06),0 4px 14px rgba(16,24,22,.06);
   --radius:16px; --foot:68px;
   color-scheme:light;
@@ -28,6 +29,7 @@
     --bg:#0b1412; --surface:#132220; --surface-2:#1a2d2a; --text:#e6efed; --muted:#93a6a1;
     --border:#243a36; --accent:#2dd4bf; --accent-ink:#062a26; --accent-soft:#12352f;
     --in:#4ade80; --in-soft:#133524; --out:#fb923c; --out-soft:#3a2214;
+    --warn:#fbbf24; --warn-soft:#3a2d10;
     --shadow:0 1px 2px rgba(0,0,0,.3);
     color-scheme:dark;
   }
@@ -81,6 +83,20 @@ main{padding:0 16px calc(var(--foot) + env(safe-area-inset-bottom) + 24px);max-w
 .pending{color:var(--out);font-size:12px}
 .row-val{font-weight:650;white-space:nowrap;margin-top:2px}
 
+.mh-prev{font-size:12px;color:var(--muted);margin-top:2px;padding-right:30px}
+.row.is-pend .row-desc{opacity:.75}
+.chip.pend{background:var(--warn-soft);color:var(--warn)}
+.chip.late{background:var(--out);color:#fff}
+.chip.today{background:var(--warn);color:#fff}
+.chip.soon{background:var(--warn-soft);color:var(--warn)}
+.due{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--warn);overflow:hidden}
+.due-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px}
+.due-head h2{margin:0;font-size:17px}
+.due-head span{font-size:13px;color:var(--muted)}
+.due .rows{border-top:1px solid var(--border)}
+.row-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.pay{border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:999px;font-size:13px;font-weight:600;padding:5px 12px;white-space:nowrap}
+.pay:active{background:var(--accent-soft)}
 .empty{text-align:center;color:var(--muted);padding:56px 24px}
 .empty svg{width:48px;height:48px;opacity:.5;margin-bottom:8px}
 .empty button{margin-top:16px}
@@ -101,6 +117,8 @@ input[type=date].input{appearance:none;-webkit-appearance:none;display:block}
 .seg label svg{width:18px;height:18px}
 .seg input:checked + label.out{background:var(--out-soft);border-color:var(--out);color:var(--out)}
 .seg input:checked + label.in{background:var(--in-soft);border-color:var(--in);color:var(--in)}
+.seg input:checked + label.pend{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.seg input:checked + label.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .seg input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
 
 .toolbar{display:flex;gap:6px;margin-bottom:6px}
@@ -206,6 +224,16 @@ body.form-mode .toast{bottom:24px}
       </div>
 
       <div class="field">
+        <span class="lbl">Situação</span>
+        <div class="seg" role="radiogroup" aria-label="Situação">
+          <input type="radio" name="situacao" id="s-ok" value="pago" checked>
+          <label for="s-ok" class="ok" id="lbl-s-ok">Pago</label>
+          <input type="radio" name="situacao" id="s-pend" value="pendente">
+          <label for="s-pend" class="pend" id="lbl-s-pend">A pagar</label>
+        </div>
+      </div>
+
+      <div class="field">
         <label class="lbl" for="f-valor">Valor</label>
         <input class="input valor num" id="f-valor" inputmode="numeric" placeholder="R$ 0,00" value="">
       </div>
@@ -286,6 +314,8 @@ body.form-mode .toast{bottom:24px}
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- ponte do Capacitor: só faz algo dentro do app Android; no navegador/iPhone fica inativa -->
+<script src="capacitor.js"></script>
 <script>
 (() => {
 'use strict';
@@ -368,6 +398,52 @@ function toast(msg){
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2800);
 }
+
+/* ================= Android (Capacitor) ================= */
+// No app Android: avisos locais de vencimento e login nativo do Google.
+// No navegador e no iPhone (PWA) tudo aqui fica desligado.
+const AVISO_HORA = 9; // horário dos avisos (dia anterior e dia do vencimento)
+const Native = (() => {
+  const C = window.Capacitor;
+  const on = !!(C && C.isNativePlatform && C.isNativePlatform() && C.registerPlugin);
+  if (!on) return { on:false, scheduleSoon(){}, clearAll(){} };
+  const LN = C.registerPlugin('LocalNotifications');
+  const SL = C.registerPlugin('SocialLogin');
+
+  const plain = md => String(md).replace(/[*_]/g, '').replace(/\s+/g, ' ').trim();
+  // id numérico estável por registro (o Android exige inteiro)
+  const nid = (id, kind) => { let h = 5381; for (const c of id) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0; return (h % 1000000000) * 2 + kind; };
+
+  let timer, asked = false;
+  async function schedule(){
+    try {
+      if (!session) return clearAll();
+      let perm = await LN.checkPermissions();
+      if (perm.display !== 'granted' && !asked) { asked = true; perm = await LN.requestPermissions(); }
+      const now = new Date(), list = [];
+      allRecords().filter(r => isPend(r) && r.tipo === 'pagamento').forEach(r => {
+        const [y, m, d] = r.data.split('-').map(Number);
+        const desc = plain(r.descricao), valor = brl.format(+r.valor);
+        const vesp = new Date(y, m - 1, d - 1, AVISO_HORA), dia = new Date(y, m - 1, d, AVISO_HORA);
+        if (vesp > now) list.push({ id: nid(r.id, 0), title: 'Vence amanhã · ' + valor, body: desc, schedule:{ at: vesp, allowWhileIdle:true }, extra:{ id: r.id } });
+        if (dia > now) list.push({ id: nid(r.id, 1), title: 'Vence hoje · ' + valor, body: desc, schedule:{ at: dia, allowWhileIdle:true }, extra:{ id: r.id } });
+      });
+      const pend = await LN.getPending();
+      if (pend.notifications.length) await LN.cancel({ notifications: pend.notifications.map(n => ({ id: n.id })) });
+      if (perm.display === 'granted' && list.length) await LN.schedule({ notifications: list });
+    } catch (e) { console.warn('avisos', e); }
+  }
+  async function clearAll(){
+    try { const p = await LN.getPending(); if (p.notifications.length) await LN.cancel({ notifications: p.notifications.map(n => ({ id: n.id })) }); } catch {}
+  }
+  // tocar no aviso abre o registro
+  try { LN.addListener('localNotificationActionPerformed', ev => { const id = ev?.notification?.extra?.id; if (id && session) go('#/editar/' + encodeURIComponent(id)); }); } catch {}
+
+  return {
+    on:true, SL, clearAll,
+    scheduleSoon(){ clearTimeout(timer); timer = setTimeout(schedule, 600); }
+  };
+})();
 
 /* ================= API ================= */
 async function net(url, opts){
@@ -473,7 +549,19 @@ function render(){
       ? `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/></svg><div>Nenhum registro ainda.<br>Toque em <b>+</b> para adicionar o primeiro.</div></div>`
       : `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><div>Conecte sua planilha do Google para começar.</div><button class="btn primary small" id="go-config">Configurar URL</button></div>`;
     const g = $('#go-config'); if (g) g.onclick = () => go('#/config');
+    Native.scheduleSoon();
     return;
+  }
+
+  const today = todayISO();
+  const pend = all.filter(isPend).sort((a, b) => a.data.localeCompare(b.data));
+  let html = '';
+  if (pend.length) {
+    const aPagar = pend.filter(r => r.tipo === 'pagamento').reduce((t, r) => t + +r.valor, 0);
+    html += `<section class="due" aria-label="A vencer">
+      <div class="due-head"><h2>A vencer</h2><span class="num">${aPagar ? 'a pagar ' + brl.format(aPagar) : ''}</span></div>
+      <ul class="rows">${pend.map(r => rowHtml(r, { due:true, today })).join('')}</ul>
+    </section>`;
   }
 
   const groups = new Map();
@@ -483,37 +571,74 @@ function render(){
     groups.get(key).push(r);
   });
   const keys = [...groups.keys()].sort().reverse();
-  if (firstRender) { openMonths.add(keys[0]); firstRender = false; }
+  if (firstRender) { openMonths.add(keys.includes(today.slice(0, 7)) ? today.slice(0, 7) : keys[0]); firstRender = false; }
 
-  list.innerHTML = keys.map(key => {
+  html += keys.map(key => {
     const items = groups.get(key).sort((a, b) => b.data.localeCompare(a.data));
-    let ent = 0, sai = 0;
-    items.forEach(r => r.tipo === 'recebimento' ? ent += +r.valor : sai += +r.valor);
+    // saldo só com o que já foi pago/recebido; o pendente aparece como "previsto"
+    let ent = 0, sai = 0, pEnt = 0, pSai = 0;
+    items.forEach(r => {
+      const v = +r.valor, inn = r.tipo === 'recebimento';
+      if (isPend(r)) inn ? pEnt += v : pSai += v;
+      else inn ? ent += v : sai += v;
+    });
     const saldo = ent - sai;
     const open = openMonths.has(key);
+    const prev = [pSai ? `a pagar ${brl.format(pSai)}` : '', pEnt ? `a receber ${brl.format(pEnt)}` : ''].filter(Boolean).join(' · ');
     return `<section class="month${open ? ' open' : ''}" data-key="${key}">
       <button class="month-head" aria-expanded="${open}">
         <div class="mh-top"><span class="mh-title">${monthLabel(key)}</span><span class="mh-total num ${saldo >= 0 ? 'pos' : 'neg'}">${brl.format(saldo)}</span>${IC_CHEV}</div>
         <div class="mh-sub"><span>${items.length} ${items.length === 1 ? 'registro' : 'registros'}</span><span class="mh-split num"><span class="i">+${brl.format(ent)}</span> · <span class="o">−${brl.format(sai)}</span></span></div>
+        ${prev ? `<div class="mh-prev num">Previsto: ${prev}</div>` : ''}
       </button>
       <ul class="rows"${open ? '' : ' hidden'}>
-        ${items.map(r => {
-          const inn = r.tipo === 'recebimento';
-          return `<li class="row" data-id="${esc(r.id)}" tabindex="0" role="button" aria-label="Editar registro">
-            <span class="badge ${inn ? 'in' : 'out'}" title="${inn ? 'Recebimento' : 'Pagamento'}">${inn ? IC_IN : IC_OUT}</span>
-            <div class="row-mid">
-              <div class="row-desc">${mdToHtml(r.descricao || '')}</div>
-              <div class="row-meta"><span class="num">${fmtDay(r.data)}</span>${r.categoria ? `<span class="chip">${esc(r.categoria)}</span>` : ''}${r._pending ? '<span class="pending">● aguardando envio</span>' : ''}</div>
-            </div>
-            <span class="row-val num ${inn ? 'pos' : 'neg'}">${inn ? '+' : '−'}${brl.format(+r.valor)}</span>
-          </li>`;
-        }).join('')}
+        ${items.map(r => rowHtml(r, { today })).join('')}
       </ul>
     </section>`;
   }).join('');
+  list.innerHTML = html;
+  Native.scheduleSoon();
+}
+
+function isPend(r){ return r.situacao === 'pendente'; }
+function daysBetween(a, b){
+  const [y1, m1, d1] = a.split('-').map(Number), [y2, m2, d2] = b.split('-').map(Number);
+  return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 864e5);
+}
+function dueChip(r, today){
+  const inn = r.tipo === 'recebimento';
+  const n = daysBetween(today, r.data);
+  if (n < 0) return `<span class="chip late">${inn ? 'Atrasado' : 'Vencido'} há ${-n} ${-n === 1 ? 'dia' : 'dias'}</span>`;
+  if (n === 0) return `<span class="chip today">${inn ? 'Previsto para hoje' : 'Vence hoje'}</span>`;
+  if (n === 1) return `<span class="chip soon">${inn ? 'Previsto para amanhã' : 'Vence amanhã'}</span>`;
+  return `<span class="chip pend">${inn ? 'A receber' : 'A pagar'}</span>`;
+}
+function rowHtml(r, { due, today }){
+  const inn = r.tipo === 'recebimento';
+  const pend = isPend(r);
+  return `<li class="row${pend ? ' is-pend' : ''}" data-id="${esc(r.id)}" tabindex="0" role="button" aria-label="Editar registro">
+    <span class="badge ${inn ? 'in' : 'out'}" title="${inn ? 'Recebimento' : 'Pagamento'}">${inn ? IC_IN : IC_OUT}</span>
+    <div class="row-mid">
+      <div class="row-desc">${mdToHtml(r.descricao || '')}</div>
+      <div class="row-meta"><span class="num">${fmtDay(r.data)}</span>${pend ? dueChip(r, today) : ''}${r.categoria ? `<span class="chip">${esc(r.categoria)}</span>` : ''}${r._pending ? '<span class="pending">● aguardando envio</span>' : ''}</div>
+    </div>
+    <div class="row-right">
+      <span class="row-val num ${inn ? 'pos' : 'neg'}">${inn ? '+' : '−'}${brl.format(+r.valor)}</span>
+      ${due ? `<button type="button" class="pay" data-pay="${esc(r.id)}">${inn ? 'Recebi ✓' : 'Paguei ✓'}</button>` : ''}
+    </div>
+  </li>`;
 }
 
 $('#list').addEventListener('click', e => {
+  const pay = e.target.closest('[data-pay]');
+  if (pay) {
+    const r = findRecord(pay.dataset.pay); if (!r) return;
+    const { _pending, ...rec } = r;
+    enqueue('update', { ...rec, situacao:'pago' });
+    render();
+    sendNow(r.tipo === 'recebimento' ? 'Marcado como recebido ✓' : 'Marcado como pago ✓');
+    return;
+  }
   const row = e.target.closest('.row');
   if (row) return go('#/editar/' + encodeURIComponent(row.dataset.id));
   const head = e.target.closest('.month-head'); if (!head) return;
@@ -532,7 +657,7 @@ $('#list').addEventListener('keydown', e => {
 
 /* ================= FORM ================= */
 const fData = $('#f-data'), fValor = $('#f-valor'), fDesc = $('#f-desc'), fCat = $('#f-cat'), catList = $('#cat-list');
-let cents = 0, editingId = null;
+let cents = 0, editingId = null, sitTouched = false;
 
 function resetForm(){
   fData.value = todayISO();
@@ -543,6 +668,9 @@ function resetForm(){
   $('#emoji-panel').classList.add('hidden');
   closeCombo();
   editingId = null;
+  sitTouched = false;
+  $('#s-ok').checked = true;
+  updateSitLabels();
   $('#btn-delete').classList.add('hidden');
   disarmDelete();
 }
@@ -554,11 +682,27 @@ function fillForm(r){
   fValor.value = cents ? brl.format(cents / 100) : '';
   fDesc.innerHTML = mdToHtml(r.descricao || '');
   fCat.value = r.categoria || '';
+  (isPend(r) ? $('#s-pend') : $('#s-ok')).checked = true;
+  sitTouched = true;
+  updateSitLabels();
   $('#btn-delete').classList.remove('hidden');
 }
 
 // calendário ao tocar na data
 fData.addEventListener('click', () => { try { fData.showPicker(); } catch {} });
+
+// situação: data no futuro sugere "A pagar" até a pessoa escolher manualmente
+function updateSitLabels(){
+  const inn = $('#t-in').checked;
+  $('#lbl-s-ok').textContent = inn ? 'Recebido' : 'Pago';
+  $('#lbl-s-pend').textContent = inn ? 'A receber' : 'A pagar';
+}
+fData.addEventListener('change', () => {
+  if (sitTouched || !fData.value) return;
+  (fData.value > todayISO() ? $('#s-pend') : $('#s-ok')).checked = true;
+});
+document.querySelectorAll('input[name=situacao]').forEach(i => i.addEventListener('change', () => { sitTouched = true; }));
+document.querySelectorAll('input[name=tipo]').forEach(i => i.addEventListener('change', updateSitLabels));
 
 // valor: digita só números, preenche da direita (centavos)
 fValor.addEventListener('input', () => {
@@ -666,6 +810,7 @@ $('#form').addEventListener('submit', async e => {
   const rec = {
     id: editingId || uid(), data: fData.value, descricao,
     tipo: document.querySelector('input[name=tipo]:checked').value,
+    situacao: document.querySelector('input[name=situacao]:checked').value,
     categoria, valor: cents / 100
   };
   enqueue(isEdit ? 'update' : 'add', rec);
@@ -765,6 +910,7 @@ $('#btn-logout').addEventListener('click', async () => {
   const key = session && session.key;
   try { if (key) await api('logout'); } catch {}
   try { window.google && google.accounts.id.disableAutoSelect(); } catch {}
+  if (Native.on) { try { await Native.SL.logout({ provider:'google' }); } catch {} Native.clearAll(); }
   session = null; store.set(K.sess, null); loadUserData(); render();
   toast('Você saiu');
   location.replace('#/');
@@ -787,6 +933,7 @@ let gsiReady = null;
 async function showLogin(){
   const msg = $('#login-msg'); msg.textContent = '';
   try {
+    if (Native.on) return showNativeLogin();
     if (!gsiReady) gsiReady = (async () => {
       const [{ clientId }] = await Promise.all([api('config'), window.google?.accounts?.id ? null : loadScript('https://accounts.google.com/gsi/client')]);
       if (!clientId || /^COLE-AQUI/.test(clientId)) throw new Error('Falta preencher o CLIENT_ID no script da planilha.');
@@ -800,6 +947,32 @@ async function showLogin(){
     msg.textContent = e.offline ? 'Sem conexão. Conecte-se à internet para entrar.' : e.message;
   }
 }
+// Dentro do app Android o Google bloqueia o botão web: usa o login nativo (Credential Manager)
+async function showNativeLogin(){
+  const msg = $('#login-msg'), el = $('#gbtn');
+  try {
+    if (!gsiReady) gsiReady = (async () => {
+      const { clientId } = await api('config');
+      if (!clientId || /^COLE-AQUI/.test(clientId)) throw new Error('Falta preencher o CLIENT_ID no script da planilha.');
+      await Native.SL.initialize({ google:{ webClientId: clientId } });
+    })();
+    await gsiReady;
+    el.innerHTML = '<button type="button" class="btn" id="btn-native-login" style="border-radius:999px;padding:0 22px"><svg viewBox="0 0 48 48" width="18" height="18" style="vertical-align:-3px;margin-right:8px"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>Entrar com Google</button>';
+    $('#btn-native-login').onclick = async () => {
+      msg.textContent = '';
+      try {
+        const res = await Native.SL.login({ provider:'google', options:{} });
+        const tok = res && res.result && res.result.idToken;
+        if (!tok) throw new Error('O Google não devolveu a identificação. Tente de novo.');
+        onGoogleCredential({ credential: tok });
+      } catch (e) { msg.textContent = /cancel/i.test(e.message || '') ? '' : (e.message || 'Falha no login'); }
+    };
+  } catch (e) {
+    gsiReady = null;
+    msg.textContent = e.offline ? 'Sem conexão. Conecte-se à internet para entrar.' : e.message;
+  }
+}
+
 async function onGoogleCredential(resp){
   const msg = $('#login-msg'); msg.textContent = 'Entrando…';
   try {
@@ -862,7 +1035,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) sync
 
 /* ================= start ================= */
 loadUserData(); render(); route(); sync({ silent:true });
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+// no app Android os arquivos já vêm dentro do APK; o service worker só serve para o PWA
+if ('serviceWorker' in navigator && location.protocol !== 'file:' && !Native.on) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 })();

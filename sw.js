@@ -1,8 +1,8 @@
 // Service worker: guarda a "casca" do app para abrir rápido e offline.
 // Ao publicar uma nova versão dos arquivos, aumente o número abaixo.
-const CACHE = 'contas-v3';
+const CACHE = 'contas-v4';
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+  './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './capacitor.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

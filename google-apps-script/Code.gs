@@ -34,7 +34,8 @@ const SESSAO_DIAS = 180;
 
 /* ======================================================== */
 
-const HEADERS = ['ID', 'Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Criado em'];
+const HEADERS = ['ID', 'Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Criado em', 'Situação'];
+const COL_SITUACAO = 8; // coluna H
 
 /* ---------- Endpoints ---------- */
 
@@ -169,6 +170,9 @@ function sheetFor_(user) {
       sh = ss.insertSheet(user.nome);
     }
   }
+  if (sh.getLastRow() > 0 && sh.getRange(1, COL_SITUACAO).getValue() === '') {
+    sh.getRange(1, COL_SITUACAO).setValue('Situação').setFontWeight('bold'); // abas criadas antes deste campo
+  }
   if (sh.getLastRow() === 0) {
     sh.appendRow(HEADERS);
     sh.setFrozenRows(1);
@@ -190,6 +194,7 @@ function upsert_(sh, r) {
   const valor = Number(r.valor);
   const descricao = String(r.descricao || '').trim();
   const categoria = String(r.categoria || '').trim();
+  const pendente = String(r.situacao || 'pago') === 'pendente';
 
   if (!id) throw new Error('ID ausente');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) throw new Error('Data inválida');
@@ -205,12 +210,15 @@ function upsert_(sh, r) {
     Math.round(valor * 100) / 100
   ];
 
+  const situacao = tipo === 'pagamento' ? (pendente ? 'A pagar' : 'Pago') : (pendente ? 'A receber' : 'Recebido');
+
   const row = findRow_(sh, id);
   if (row > 0) {
     sh.getRange(row, 2, 1, values.length).setValues([values]);
+    sh.getRange(row, COL_SITUACAO).setValue(situacao);
     return { id: id, updated: true };
   }
-  sh.getRange(sh.getLastRow() + 1, 1, 1, values.length + 2).setValues([[id].concat(values, [new Date()])]);
+  sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([[id].concat(values, [new Date(), situacao])]);
   return { id: id, created: true };
 }
 
@@ -252,7 +260,9 @@ function list_(sh) {
       descricao: String(row[2] || ''),
       tipo: /^rec/i.test(String(row[3])) ? 'recebimento' : 'pagamento',
       categoria: String(row[4] || ''),
-      valor: Number(row[5]) || 0
+      valor: Number(row[5]) || 0,
+      // vazio (registros antigos) conta como pago
+      situacao: /^a /i.test(String(row[7] || '').trim()) ? 'pendente' : 'pago'
     });
   });
   return out;

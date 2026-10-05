@@ -1,0 +1,19 @@
+{
+  "name": "minhas-contas-android",
+  "private": true,
+  "version": "1.0.0",
+  "description": "App Android (Capacitor) do Minhas Contas: mesmo código do PWA + avisos de vencimento",
+  "scripts": {
+    "copy-web": "node copy-web.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capgo/capacitor-social-login": "^8.5.12"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2"
+  }
+}
