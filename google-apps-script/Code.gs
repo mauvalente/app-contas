@@ -34,6 +34,10 @@ const SESSAO_DIAS = 180;
 
 /* ======================================================== */
 
+// Versão do script: o app avisa quando a publicada for mais antiga que a que ele espera.
+// Aumente junto com SCRIPT_MIN no index.html sempre que o script ganhar campos novos.
+const SCRIPT_VERSAO = 3;
+
 const HEADERS = ['ID', 'Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Criado em', 'Situação', 'Avisos'];
 const COL_SITUACAO = 8; // coluna H
 const COL_AVISOS = 9;   // coluna I
@@ -50,7 +54,7 @@ function doPost(e) {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     const action = body.action;
 
-    if (action === 'config') return json_({ ok: true, clientId: CLIENT_ID });
+    if (action === 'config') return json_({ ok: true, clientId: CLIENT_ID, versao: SCRIPT_VERSAO });
     if (action === 'login') return json_(Object.assign({ ok: true }, login_(body.credential)));
 
     const user = auth_(body.session);
@@ -65,7 +69,7 @@ function doPost(e) {
     lock.waitLock(15000);
     try {
       const sh = sheetFor_(user);
-      if (action === 'list') return json_({ ok: true, user: user, records: list_(sh) });
+      if (action === 'list') return json_({ ok: true, user: user, versao: SCRIPT_VERSAO, records: list_(sh) });
       if (action === 'add' || action === 'update') return json_(Object.assign({ ok: true }, upsert_(sh, body.record || {})));
       if (action === 'delete') return json_(Object.assign({ ok: true }, delete_(sh, body.record || {})));
     } finally {

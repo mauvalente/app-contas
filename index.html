@@ -150,6 +150,10 @@ input[type=date].input{appearance:none;-webkit-appearance:none;display:block}
 .hist .use{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:10px 0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl}
 .hist .use.current{color:var(--accent);font-weight:600}
 .hist .x{width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px;border-radius:10px}
+.script-warn{display:flex;gap:12px;align-items:flex-start;background:var(--warn-soft);color:var(--text);border:1px solid var(--warn);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;text-align:left;width:100%;font-size:14px}
+.script-warn b{display:block;color:var(--warn);margin-bottom:2px}
+.script-warn ol{margin:6px 0 0;padding-left:18px}
+button.script-warn{cursor:pointer}
 .aviso-check{display:flex;align-items:center;gap:12px;min-height:48px;padding:10px 14px;border:1px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer}
 .aviso-check input{width:22px;height:22px;accent-color:var(--accent);flex:none}
 .aviso-check .t{flex:1;min-width:0}
@@ -218,6 +222,10 @@ body.form-mode .toast{bottom:24px}
 <main>
   <!-- ============ HOME ============ -->
   <section class="screen active" id="screen-home" aria-label="Registros">
+    <button type="button" class="script-warn hidden" id="warn-home">
+      <span aria-hidden="true">⚠️</span>
+      <span><b>Script da planilha desatualizado</b>Situação e avisos não estão sendo salvos na planilha. Toque para ver como atualizar.</span>
+    </button>
     <div id="list"></div>
   </section>
 
@@ -301,6 +309,18 @@ body.form-mode .toast{bottom:24px}
 
   <!-- ============ CONFIGURAÇÕES ============ -->
   <section class="screen" id="screen-config" aria-label="Configurações">
+    <div class="script-warn hidden" id="warn-config" role="alert">
+      <span aria-hidden="true">⚠️</span>
+      <span><b>Script da planilha desatualizado</b>
+        A versão publicada (<span id="warn-ver"></span>) é mais antiga que a que este app precisa (<span id="warn-min"></span>). Enquanto isso, a situação "A pagar" e os avisos não ficam salvos na planilha.
+        <ol>
+          <li>Na planilha: Extensões → Apps Script.</li>
+          <li>Cole o <code>Code.gs</code> novo e preencha de novo CLIENT_ID e USUARIOS.</li>
+          <li>Implantar → Gerenciar implantações → ✏️ → Versão: <b style="display:inline;color:inherit">Nova versão</b> → Implantar.</li>
+        </ol>
+      </span>
+    </div>
+
     <div class="card account-card hidden" id="account-card" style="margin-bottom:12px">
       <div class="account">
         <div class="avatar" id="acc-avatar"></div>
@@ -547,6 +567,17 @@ const fmtAviso = at => {
   return `${dia} ${d.getHours()}h${d.getMinutes() ? pad(d.getMinutes()) : ''}`;
 };
 
+/* ================= versão do script ================= */
+const SCRIPT_MIN = 3;      // versão mínima do Code.gs que este app precisa
+let scriptVersao = null;   // null = ainda não sabemos
+function setScriptVersao(v){ scriptVersao = Number(v) || 1; renderScriptWarn(); } // scripts antigos não mandam versão
+function renderScriptWarn(){
+  const old = scriptVersao !== null && scriptVersao < SCRIPT_MIN && !!session;
+  $('#warn-home').classList.toggle('hidden', !old);
+  $('#warn-config').classList.toggle('hidden', !old);
+  if (old) { $('#warn-ver').textContent = 'v' + scriptVersao; $('#warn-min').textContent = 'v' + SCRIPT_MIN; }
+}
+
 /* ================= API ================= */
 async function net(url, opts){
   try { return await fetch(url, opts); }
@@ -579,6 +610,7 @@ async function sync({ silent } = {}){
     await flush();
     const data = await api('list');
     records = data.records || [];
+    setScriptVersao(data.versao);
     if (data.user) { session.nome = data.user.nome; store.set(K.sess, session); }
     saveRecords();
     render();
@@ -1207,11 +1239,13 @@ function route(){
     }
   }
   if (scr === 'config') renderConfig();
+  renderScriptWarn();
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', route);
 $('#nav-home').onclick = () => location.hash === '#/config' ? (inAppNav ? back() : location.replace('#/')) : null;
 $('#nav-add').onclick = () => go('#/novo');
+$('#warn-home').onclick = () => go('#/config');
 $('#nav-config').onclick = () => location.hash !== '#/config' && go('#/config');
 $('#btn-sync').onclick = () => !cfg.url ? go('#/config') : session ? sync() : route();
 

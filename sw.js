@@ -1,6 +1,6 @@
 // Service worker: guarda a "casca" do app para abrir rápido e offline.
 // Ao publicar uma nova versão dos arquivos, aumente o número abaixo.
-const CACHE = 'contas-v4';
+const CACHE = 'contas-v5';
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './capacitor.js'];
 
