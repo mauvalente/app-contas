@@ -81,7 +81,7 @@ Anote o endereço, sem barra no final. Ele é usado no passo 2.
 - Linhas digitadas direto na planilha ganham um ID automático para poderem ser editadas pelo app.
 - Na planilha, negrito fica como `*texto*` e itálico como `_texto_`.
 - Na planilha, a coluna **H (Situação)** mostra Pago, A pagar, Recebido ou A receber. Registros antigos sem situação contam como pagos.
-- Ao atualizar os arquivos do app, aumente o número em `CACHE = 'contas-v5'` no `sw.js` para os celulares baixarem a versão nova.
+- Ao atualizar os arquivos do app, aumente o número em `CACHE = 'contas-v6'` no `sw.js` para os celulares baixarem a versão nova.
 
 ## Testar no computador
 

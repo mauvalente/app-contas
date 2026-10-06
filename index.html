@@ -193,7 +193,7 @@ footer.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;height:calc(var(--fo
 body.form-mode footer.bar{display:none}
 body.login-mode .fab,body.login-mode #nav-home{visibility:hidden}
 .login{text-align:center;padding:32px 20px;margin-top:8vh}
-.login .logo{width:72px;height:72px;border-radius:20px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;margin:0 auto 16px;font-weight:800;font-size:26px}
+.login .logo{width:96px;height:96px;border-radius:24px;display:block;margin:0 auto 16px;box-shadow:0 6px 18px rgba(15,118,110,.25)}
 .login h2{margin:0 0 6px;font-size:20px}
 .login p{margin:0 0 22px;color:var(--muted)}
 #gbtn{display:flex;justify-content:center;min-height:44px}
@@ -232,7 +232,7 @@ body.form-mode .toast{bottom:24px}
   <!-- ============ LOGIN ============ -->
   <section class="screen" id="screen-login" aria-label="Entrar">
     <div class="card login">
-      <div class="logo">R$</div>
+      <img class="logo" src="icons/icon-192.png" alt="" width="96" height="96">
       <h2>Entre para continuar</h2>
       <p>Use sua conta Google. Só os e-mails autorizados na planilha têm acesso.</p>
       <div id="gbtn"></div>
