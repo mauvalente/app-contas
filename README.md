@@ -89,14 +89,21 @@ Anote o endereço, sem barra no final. Ele é usado no passo 2.
 
 ## App Android (com avisos de vencimento)
 
-O mesmo app, empacotado com o Capacitor. A diferença: no Android ele avisa às **9h do dia anterior** e às **9h do dia** do vencimento de cada pagamento "A pagar". Os avisos são agendados no próprio celular, então não precisam de servidor nem de internet na hora. Marcou como pago ou excluiu, o aviso é cancelado. No iPhone e no navegador nada disso é ativado.
+O mesmo app, empacotado com o Capacitor. A diferença: no Android, um pagamento "A pagar" pode ter **aviso de vencimento**. No cadastro ou na edição, marque **🔔 Avisar sobre o vencimento** e escolha na janela que abre: **no dia anterior**, **no dia do vencimento** ou os dois, sempre às 9h. Sem marcar, não há aviso. As contas com aviso mostram um 🔔 com a data e a hora do próximo.
+
+Os avisos são agendados no próprio celular, então não precisam de servidor nem de internet na hora. Marcou como pago ou excluiu, o aviso é cancelado. No iPhone e no navegador a opção não aparece, mas o que foi escolhido no Android fica guardado. A escolha vai para a **coluna I (Avisos)** da planilha. Contas "A pagar" criadas antes dessa opção continuam com os dois avisos até você editar.
+
+Para conferir se está tudo certo, abra **Ajustes → Avisos de vencimento**. Ali aparecem a permissão de notificações, se o horário é exato ou aproximado, a lista dos próximos avisos e um botão **Enviar aviso de teste**. Na lista de contas, cada pendente com aviso agendado mostra um 🔔 com o dia e a hora.
+
+Um aviso que já passou não é enviado depois. Exemplo: um boleto que vence amanhã, cadastrado hoje às 15h, não recebe o "vence amanhã" (era às 9h de hoje), só o "vence hoje", amanhã às 9h.
 
 Os avisos são agendados sempre que o app abre e sincroniza. Um boleto cadastrado por outro aparelho só ganha aviso no Android depois que o app for aberto lá. Para mudar o horário, altere `AVISO_HORA` no `index.html`.
 
 ### 1. Ferramentas no computador (uma vez)
 
 - **Node.js 22** ou mais novo.
-- **Android Studio**: instale e abra uma vez. Ele baixa o SDK do Android e já traz o Java 21 que o script usa.
+- **SDK do Android**: o script usa o mesmo do Laps (`~/.local/share/Android/sdk`), ou o que estiver em `ANDROID_HOME`.
+- **JDK 21**: o Capacitor 8 não funciona com o 17 nem com o 25. Instale com `sudo apt install openjdk-21-jdk`. O script acha o 21 sozinho e usa só durante o build, sem mexer no `JAVA_HOME` que o Laps usa (17).
 
 ### 2. Gerar o APK
 

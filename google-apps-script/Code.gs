@@ -34,8 +34,10 @@ const SESSAO_DIAS = 180;
 
 /* ======================================================== */
 
-const HEADERS = ['ID', 'Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Criado em', 'Situação'];
+const HEADERS = ['ID', 'Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Criado em', 'Situação', 'Avisos'];
 const COL_SITUACAO = 8; // coluna H
+const COL_AVISOS = 9;   // coluna I
+const AVISO_NOMES = { vespera: 'Dia anterior', dia: 'No dia' };
 
 /* ---------- Endpoints ---------- */
 
@@ -170,8 +172,12 @@ function sheetFor_(user) {
       sh = ss.insertSheet(user.nome);
     }
   }
+  // abas criadas antes destes campos ganham os cabeçalhos novos
   if (sh.getLastRow() > 0 && sh.getRange(1, COL_SITUACAO).getValue() === '') {
-    sh.getRange(1, COL_SITUACAO).setValue('Situação').setFontWeight('bold'); // abas criadas antes deste campo
+    sh.getRange(1, COL_SITUACAO).setValue('Situação').setFontWeight('bold');
+  }
+  if (sh.getLastRow() > 0 && sh.getRange(1, COL_AVISOS).getValue() === '') {
+    sh.getRange(1, COL_AVISOS).setValue('Avisos').setFontWeight('bold');
   }
   if (sh.getLastRow() === 0) {
     sh.appendRow(HEADERS);
@@ -195,6 +201,7 @@ function upsert_(sh, r) {
   const descricao = String(r.descricao || '').trim();
   const categoria = String(r.categoria || '').trim();
   const pendente = String(r.situacao || 'pago') === 'pendente';
+  const avisos = avisosTexto_(r.avisos);
 
   if (!id) throw new Error('ID ausente');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) throw new Error('Data inválida');
@@ -215,10 +222,10 @@ function upsert_(sh, r) {
   const row = findRow_(sh, id);
   if (row > 0) {
     sh.getRange(row, 2, 1, values.length).setValues([values]);
-    sh.getRange(row, COL_SITUACAO).setValue(situacao);
+    sh.getRange(row, COL_SITUACAO, 1, 2).setValues([[situacao, avisos]]);
     return { id: id, updated: true };
   }
-  sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([[id].concat(values, [new Date(), situacao])]);
+  sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([[id].concat(values, [new Date(), situacao, avisos])]);
   return { id: id, created: true };
 }
 
@@ -262,9 +269,30 @@ function list_(sh) {
       categoria: String(row[4] || ''),
       valor: Number(row[5]) || 0,
       // vazio (registros antigos) conta como pago
-      situacao: /^a /i.test(String(row[7] || '').trim()) ? 'pendente' : 'pago'
+      situacao: /^a /i.test(String(row[7] || '').trim()) ? 'pendente' : 'pago',
+      avisos: avisosLista_(row[8])
     });
   });
+  return out;
+}
+
+/* ---------- Avisos ---------- */
+
+// ['vespera','dia'] -> "Dia anterior, No dia"; lista vazia -> "Nenhum"
+function avisosTexto_(lista) {
+  if (!Array.isArray(lista)) return '';
+  const nomes = ['vespera', 'dia'].filter(function (k) { return lista.indexOf(k) >= 0; })
+    .map(function (k) { return AVISO_NOMES[k]; });
+  return nomes.length ? nomes.join(', ') : 'Nenhum';
+}
+
+// célula vazia (registros antigos) -> null: o app trata como "os dois"
+function avisosLista_(texto) {
+  const t = String(texto || '').trim();
+  if (!t) return null;
+  const out = [];
+  if (/anterior/i.test(t)) out.push('vespera');
+  if (/no dia/i.test(t)) out.push('dia');
   return out;
 }
 

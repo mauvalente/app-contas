@@ -15,22 +15,30 @@ command -v node >/dev/null || fail "Node.js não encontrado. Instale a versão 2
 NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]')
 [ "$NODE_MAJOR" -ge 22 ] || fail "Node.js $NODE_MAJOR encontrado; o Capacitor 8 precisa do 22 ou mais novo."
 
-# Java 21: usa o JAVA_HOME, ou o Java que vem com o Android Studio
-if [ -z "${JAVA_HOME:-}" ]; then
-  for d in "$HOME/android-studio/jbr" /opt/android-studio/jbr /snap/android-studio/current/jbr \
-           /usr/local/android-studio/jbr "$HOME/.local/share/JetBrains/Toolbox/apps/android-studio/jbr"; do
-    [ -x "$d/bin/java" ] && export JAVA_HOME="$d" && break
+# Java: o Capacitor 8 precisa do JDK 21; o Gradle dele roda até o 24.
+# Procura um Java compatível, mesmo que o JAVA_HOME aponte para outro (ex.: o 17 do Laps).
+java_major() { "$1/bin/java" -version 2>&1 | sed -n 's/.*version "\([0-9]*\).*/\1/p' | head -1; }
+FOUND=""
+for d in "${JAVA_HOME:-}" /usr/lib/jvm/java-21-openjdk* /usr/lib/jvm/*-21* /usr/lib/jvm/*21* \
+         "$HOME/android-studio/jbr" /opt/android-studio/jbr /snap/android-studio/current/jbr \
+         /usr/lib/jvm/java-2[2-4]-openjdk* /usr/lib/jvm/*; do
+  [ -n "$d" ] && [ -x "$d/bin/java" ] || continue
+  m=$(java_major "$d"); [ -n "$m" ] && [ "$m" -ge 21 ] && [ "$m" -le 24 ] && FOUND="$d" && break
+done
+[ -n "$FOUND" ] || fail "Nenhum JDK 21 encontrado (o 17 e o 25 não servem para o Capacitor 8). Instale com:  sudo apt install openjdk-21-jdk"
+export JAVA_HOME="$FOUND"
+JAVA_MAJOR=$(java_major "$JAVA_HOME")
+
+# SDK do Android (o mesmo do Laps fica em ~/.local/share/Android/sdk)
+if [ -z "${ANDROID_HOME:-}" ]; then
+  for d in "${ANDROID_SDK_ROOT:-}" "$HOME/.local/share/Android/sdk" "$HOME/Android/Sdk"; do
+    [ -n "$d" ] && [ -d "$d/platforms" -o -d "$d/platform-tools" ] && ANDROID_HOME="$d" && break
   done
 fi
-if [ -n "${JAVA_HOME:-}" ]; then JAVA="$JAVA_HOME/bin/java"; else JAVA="$(command -v java || true)"; fi
-[ -n "$JAVA" ] || fail "Java não encontrado. Instale o Android Studio (ele traz o Java) ou o JDK 21."
-JAVA_MAJOR=$("$JAVA" -version 2>&1 | sed -n 's/.*version "\([0-9]*\).*/\1/p' | head -1)
-[ "${JAVA_MAJOR:-0}" -ge 21 ] || fail "Java $JAVA_MAJOR encontrado; precisa do 21 ou mais novo (o do Android Studio serve)."
-
-# SDK do Android
-export ANDROID_HOME="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}}"
-[ -d "$ANDROID_HOME" ] || fail "SDK do Android não encontrado em $ANDROID_HOME. Abra o Android Studio uma vez para ele instalar o SDK."
-echo "  Node $NODE_MAJOR · Java $JAVA_MAJOR · SDK em $ANDROID_HOME"
+export ANDROID_HOME="${ANDROID_HOME:-}"
+[ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME" ] || fail "SDK do Android não encontrado. Defina ANDROID_HOME (ex.: export ANDROID_HOME=~/.local/share/Android/sdk)."
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+echo "  Node $NODE_MAJOR · Java $JAVA_MAJOR ($JAVA_HOME) · SDK em $ANDROID_HOME"
 
 # ---------- 2. Dependências e arquivos do app ----------
 say "Instalando dependências (npm install)"
@@ -64,7 +72,7 @@ cp android/app/build/outputs/apk/debug/app-debug.apk MinhasContas.apk
 KEYSTORE="$HOME/.android/debug.keystore"
 SHA1=""
 if [ -f "$KEYSTORE" ]; then
-  KEYTOOL="${JAVA_HOME:+$JAVA_HOME/bin/}keytool"
+  KEYTOOL="$JAVA_HOME/bin/keytool"
   SHA1=$("$KEYTOOL" -list -v -keystore "$KEYSTORE" -alias androiddebugkey -storepass android 2>/dev/null \
          | sed -n 's/.*SHA1: *//p' | head -1)
 fi

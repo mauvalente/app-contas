@@ -85,6 +85,7 @@ main{padding:0 16px calc(var(--foot) + env(safe-area-inset-bottom) + 24px);max-w
 
 .mh-prev{font-size:12px;color:var(--muted);margin-top:2px;padding-right:30px}
 .row.is-pend .row-desc{opacity:.75}
+.chip.bell{background:var(--accent-soft);color:var(--accent)}
 .chip.pend{background:var(--warn-soft);color:var(--warn)}
 .chip.late{background:var(--out);color:#fff}
 .chip.today{background:var(--warn);color:#fff}
@@ -149,6 +150,32 @@ input[type=date].input{appearance:none;-webkit-appearance:none;display:block}
 .hist .use{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:10px 0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl}
 .hist .use.current{color:var(--accent);font-weight:600}
 .hist .x{width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px;border-radius:10px}
+.aviso-check{display:flex;align-items:center;gap:12px;min-height:48px;padding:10px 14px;border:1px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer}
+.aviso-check input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.aviso-check .t{flex:1;min-width:0}
+.aviso-check .t b{display:block;font-weight:600}
+.aviso-check .t span{font-size:13px;color:var(--muted)}
+.aviso-check .alt{border:0;background:transparent;color:var(--accent);font-weight:600;font-size:14px;padding:6px}
+.modal{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.modal[hidden]{display:none}
+.modal .sheet{width:100%;max-width:440px;background:var(--surface);border-radius:20px;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.modal h3{margin:0 0 4px;font-size:18px}
+.modal p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.modal label.opt-row{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--bg)}
+.modal label.opt-row input{width:22px;height:22px;accent-color:var(--accent)}
+.modal label.opt-row span{font-size:13px;color:var(--muted);display:block}
+@media (min-width:600px){.modal{align-items:center}}
+.aviso-status{list-style:none;margin:0;padding:0;font-size:14px}
+.aviso-status li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.aviso-status li:last-child{border-bottom:0}
+.aviso-status .ok{color:var(--in);font-weight:600}
+.aviso-status .no{color:var(--out);font-weight:600}
+.aviso-sub{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 6px}
+.aviso-list{list-style:none;margin:0;padding:0;font-size:14px}
+.aviso-list li{padding:8px 0;border-bottom:1px solid var(--border)}
+.aviso-list li:last-child{border-bottom:0}
+.aviso-list b{display:block}
+.aviso-list span{color:var(--muted);font-size:13px}
 .hint{font-size:13px;color:var(--muted);margin:6px 0 0}
 .section-title{font-size:15px;font-weight:650;margin:22px 0 10px}
 
@@ -233,6 +260,15 @@ body.form-mode .toast{bottom:24px}
         </div>
       </div>
 
+      <!-- só no app Android, para pagamento "A pagar" -->
+      <div class="field hidden" id="f-aviso-wrap">
+        <label class="aviso-check" for="f-aviso">
+          <input type="checkbox" id="f-aviso">
+          <span class="t"><b>🔔 Avisar sobre o vencimento</b><span id="f-aviso-resumo">Sem aviso</span></span>
+          <button type="button" class="alt hidden" id="f-aviso-alt">Alterar</button>
+        </label>
+      </div>
+
       <div class="field">
         <label class="lbl" for="f-valor">Valor</label>
         <input class="input valor num" id="f-valor" inputmode="numeric" placeholder="R$ 0,00" value="">
@@ -288,6 +324,19 @@ body.form-mode .toast{bottom:24px}
     <ul class="hist" id="hist"></ul>
     <p class="hint" id="hist-empty">Nenhuma ainda. Ao salvar uma URL ela aparece aqui para reutilizar. O ✕ remove só deste aparelho.</p>
 
+    <div id="avisos-box" class="hidden">
+      <h2 class="section-title">Avisos de vencimento</h2>
+      <div class="card">
+        <ul class="aviso-status" id="aviso-status"></ul>
+        <div class="row-btns">
+          <button type="button" class="btn small" id="btn-aviso-teste">Enviar aviso de teste</button>
+          <button type="button" class="btn small hidden" id="btn-aviso-exato">Permitir horário exato</button>
+        </div>
+        <h3 class="aviso-sub">Próximos avisos</h3>
+        <ul class="aviso-list" id="aviso-list"></ul>
+      </div>
+    </div>
+
     <h2 class="section-title">Sincronização</h2>
     <div class="card">
       <div id="sync-info" class="hint" style="margin:0"></div>
@@ -311,6 +360,19 @@ body.form-mode .toast{bottom:24px}
     Ajustes
   </button>
 </footer>
+
+<div class="modal" id="aviso-modal" hidden role="dialog" aria-modal="true" aria-labelledby="aviso-modal-t">
+  <div class="sheet">
+    <h3 id="aviso-modal-t">Quando avisar?</h3>
+    <p>Os avisos chegam às <span id="aviso-modal-hora">9h</span>.</p>
+    <label class="opt-row"><input type="checkbox" id="av-vespera"><div><b>No dia anterior</b><span id="av-vespera-q"></span></div></label>
+    <label class="opt-row"><input type="checkbox" id="av-dia"><div><b>No dia do vencimento</b><span id="av-dia-q"></span></div></label>
+    <div class="actions">
+      <button type="button" class="btn" id="av-cancel">Cancelar</button>
+      <button type="button" class="btn primary" id="av-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -406,7 +468,7 @@ const AVISO_HORA = 9; // horário dos avisos (dia anterior e dia do vencimento)
 const Native = (() => {
   const C = window.Capacitor;
   const on = !!(C && C.isNativePlatform && C.isNativePlatform() && C.registerPlugin);
-  if (!on) return { on:false, scheduleSoon(){}, clearAll(){} };
+  if (!on) return { on:false, scheduleSoon(){}, clearAll(){}, nextFor(){ return null; }, status:null };
   const LN = C.registerPlugin('LocalNotifications');
   const SL = C.registerPlugin('SocialLogin');
 
@@ -414,36 +476,76 @@ const Native = (() => {
   // id numérico estável por registro (o Android exige inteiro)
   const nid = (id, kind) => { let h = 5381; for (const c of id) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0; return (h % 1000000000) * 2 + kind; };
 
+  // estado mostrado na tela de Ajustes e nos registros
+  const status = { perm:'?', exact:'?', scheduled:[], error:'' };
   let timer, asked = false;
+
+  async function refreshPerms(){
+    try { status.perm = (await LN.checkPermissions()).display; } catch { status.perm = '?'; }
+    try { status.exact = (await LN.checkExactNotificationSetting()).exact_alarm; } catch { status.exact = '?'; }
+  }
+  async function cancelPending(){
+    const p = await LN.getPending();
+    if (p.notifications.length) await LN.cancel({ notifications: p.notifications.map(n => ({ id: n.id })) });
+  }
   async function schedule(){
+    status.error = '';
     try {
-      if (!session) return clearAll();
-      let perm = await LN.checkPermissions();
-      if (perm.display !== 'granted' && !asked) { asked = true; perm = await LN.requestPermissions(); }
+      if (!session) { await clearAll(); return; }
+      await refreshPerms();
+      if (status.perm !== 'granted' && !asked) {
+        asked = true;
+        try { status.perm = (await LN.requestPermissions()).display; } catch {}
+      }
+      const exact = status.exact === 'granted';
       const now = new Date(), list = [];
       allRecords().filter(r => isPend(r) && r.tipo === 'pagamento').forEach(r => {
+        const quer = avisosDe(r);
         const [y, m, d] = r.data.split('-').map(Number);
         const desc = plain(r.descricao), valor = brl.format(+r.valor);
         const vesp = new Date(y, m - 1, d - 1, AVISO_HORA), dia = new Date(y, m - 1, d, AVISO_HORA);
-        if (vesp > now) list.push({ id: nid(r.id, 0), title: 'Vence amanhã · ' + valor, body: desc, schedule:{ at: vesp, allowWhileIdle:true }, extra:{ id: r.id } });
-        if (dia > now) list.push({ id: nid(r.id, 1), title: 'Vence hoje · ' + valor, body: desc, schedule:{ at: dia, allowWhileIdle:true }, extra:{ id: r.id } });
+        // isExactNotification só quando o Android permite; senão o plugin abriria a tela de "Alarmes" a cada agendamento
+        const base = { body: desc, extra:{ id: r.id }, isExactNotification: exact };
+        if (quer.includes('vespera') && vesp > now) list.push({ ...base, id: nid(r.id, 0), title: 'Vence amanhã · ' + valor, schedule:{ at: vesp, allowWhileIdle:true } });
+        if (quer.includes('dia') && dia > now)  list.push({ ...base, id: nid(r.id, 1), title: 'Vence hoje · ' + valor,   schedule:{ at: dia,  allowWhileIdle:true } });
       });
-      const pend = await LN.getPending();
-      if (pend.notifications.length) await LN.cancel({ notifications: pend.notifications.map(n => ({ id: n.id })) });
-      if (perm.display === 'granted' && list.length) await LN.schedule({ notifications: list });
-    } catch (e) { console.warn('avisos', e); }
+      await cancelPending();
+      status.scheduled = [];
+      if (status.perm === 'granted' && list.length) {
+        await LN.schedule({ notifications: list });
+        status.scheduled = list.map(n => ({ recId: n.extra.id, at: n.schedule.at, title: n.title, body: n.body }))
+          .sort((a, b) => a.at - b.at);
+      }
+    } catch (e) {
+      status.error = e && e.message ? e.message : String(e);
+      console.warn('avisos', e);
+    }
+    document.dispatchEvent(new Event('avisos-atualizados'));
   }
-  async function clearAll(){
-    try { const p = await LN.getPending(); if (p.notifications.length) await LN.cancel({ notifications: p.notifications.map(n => ({ id: n.id })) }); } catch {}
-  }
+  async function clearAll(){ try { await cancelPending(); } catch {} status.scheduled = []; }
+
   // tocar no aviso abre o registro
   try { LN.addListener('localNotificationActionPerformed', ev => { const id = ev?.notification?.extra?.id; if (id && session) go('#/editar/' + encodeURIComponent(id)); }); } catch {}
 
   return {
-    on:true, SL, clearAll,
-    scheduleSoon(){ clearTimeout(timer); timer = setTimeout(schedule, 600); }
+    on:true, SL, LN, status, clearAll, refreshPerms,
+    scheduleNow: schedule,
+    scheduleSoon(){ clearTimeout(timer); timer = setTimeout(schedule, 600); },
+    // próximo aviso agendado de um registro (para mostrar o sininho na lista)
+    nextFor(recId){ return status.scheduled.find(n => n.recId === recId) || null; },
+    async test(){
+      await LN.schedule({ notifications: [{ id: 1999999999, title: 'Teste do Minhas Contas', body: 'Os avisos de vencimento vão aparecer assim.', isExactNotification:false }] });
+    }
   };
 })();
+// avisos escolhidos; registros de antes desta opção (sem valor) continuam com os dois
+function avisosDe(r){ return Array.isArray(r.avisos) ? r.avisos : ['vespera', 'dia']; }
+const fmtAviso = at => {
+  const d = new Date(at), hoje = new Date(), amanha = new Date(); amanha.setDate(hoje.getDate() + 1);
+  const dia = d.toDateString() === hoje.toDateString() ? 'hoje' : d.toDateString() === amanha.toDateString() ? 'amanhã'
+    : d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+  return `${dia} ${d.getHours()}h${d.getMinutes() ? pad(d.getMinutes()) : ''}`;
+};
 
 /* ================= API ================= */
 async function net(url, opts){
@@ -540,6 +642,11 @@ const IC_CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="curre
 function allRecords(){ return applyOps(records, myQueue(), true); }
 function findRecord(id){ return allRecords().find(r => r.id === id); }
 
+let rendering = false;
+document.addEventListener('avisos-atualizados', () => {
+  rendering = true; try { render(); } finally { rendering = false; }
+  if (location.hash === '#/config') renderAvisos();
+});
 function render(){
   const list = $('#list');
   const all = allRecords();
@@ -597,7 +704,7 @@ function render(){
     </section>`;
   }).join('');
   list.innerHTML = html;
-  Native.scheduleSoon();
+  if (!rendering) Native.scheduleSoon();
 }
 
 function isPend(r){ return r.situacao === 'pendente'; }
@@ -613,6 +720,10 @@ function dueChip(r, today){
   if (n === 1) return `<span class="chip soon">${inn ? 'Previsto para amanhã' : 'Vence amanhã'}</span>`;
   return `<span class="chip pend">${inn ? 'A receber' : 'A pagar'}</span>`;
 }
+function bellChip(r){
+  const n = isPend(r) && Native.nextFor(r.id);
+  return n ? `<span class="chip bell" title="Próximo aviso">🔔 ${fmtAviso(n.at)}</span>` : '';
+}
 function rowHtml(r, { due, today }){
   const inn = r.tipo === 'recebimento';
   const pend = isPend(r);
@@ -620,7 +731,7 @@ function rowHtml(r, { due, today }){
     <span class="badge ${inn ? 'in' : 'out'}" title="${inn ? 'Recebimento' : 'Pagamento'}">${inn ? IC_IN : IC_OUT}</span>
     <div class="row-mid">
       <div class="row-desc">${mdToHtml(r.descricao || '')}</div>
-      <div class="row-meta"><span class="num">${fmtDay(r.data)}</span>${pend ? dueChip(r, today) : ''}${r.categoria ? `<span class="chip">${esc(r.categoria)}</span>` : ''}${r._pending ? '<span class="pending">● aguardando envio</span>' : ''}</div>
+      <div class="row-meta"><span class="num">${fmtDay(r.data)}</span>${pend ? dueChip(r, today) : ''}${bellChip(r)}${r.categoria ? `<span class="chip">${esc(r.categoria)}</span>` : ''}${r._pending ? '<span class="pending">● aguardando envio</span>' : ''}</div>
     </div>
     <div class="row-right">
       <span class="row-val num ${inn ? 'pos' : 'neg'}">${inn ? '+' : '−'}${brl.format(+r.valor)}</span>
@@ -657,7 +768,7 @@ $('#list').addEventListener('keydown', e => {
 
 /* ================= FORM ================= */
 const fData = $('#f-data'), fValor = $('#f-valor'), fDesc = $('#f-desc'), fCat = $('#f-cat'), catList = $('#cat-list');
-let cents = 0, editingId = null, sitTouched = false;
+let cents = 0, editingId = null, sitTouched = false, formAvisos = [], origAvisos;
 
 function resetForm(){
   fData.value = todayISO();
@@ -671,6 +782,8 @@ function resetForm(){
   sitTouched = false;
   $('#s-ok').checked = true;
   updateSitLabels();
+  formAvisos = []; origAvisos = undefined;
+  updateAvisoField();
   $('#btn-delete').classList.add('hidden');
   disarmDelete();
 }
@@ -685,6 +798,9 @@ function fillForm(r){
   (isPend(r) ? $('#s-pend') : $('#s-ok')).checked = true;
   sitTouched = true;
   updateSitLabels();
+  origAvisos = r.avisos;
+  formAvisos = isPend(r) && r.tipo === 'pagamento' ? avisosDe(r).slice() : [];
+  updateAvisoField();
   $('#btn-delete').classList.remove('hidden');
 }
 
@@ -698,11 +814,51 @@ function updateSitLabels(){
   $('#lbl-s-pend').textContent = inn ? 'A receber' : 'A pagar';
 }
 fData.addEventListener('change', () => {
+  updateAvisoField();
   if (sitTouched || !fData.value) return;
   (fData.value > todayISO() ? $('#s-pend') : $('#s-ok')).checked = true;
+  updateAvisoField();
 });
-document.querySelectorAll('input[name=situacao]').forEach(i => i.addEventListener('change', () => { sitTouched = true; }));
-document.querySelectorAll('input[name=tipo]').forEach(i => i.addEventListener('change', updateSitLabels));
+document.querySelectorAll('input[name=situacao]').forEach(i => i.addEventListener('change', () => { sitTouched = true; updateAvisoField(); }));
+document.querySelectorAll('input[name=tipo]').forEach(i => i.addEventListener('change', () => { updateSitLabels(); updateAvisoField(); }));
+
+// ---- aviso opcional (só no app Android, pagamento "A pagar")
+const avisoVisivel = () => Native.on && $('#t-out').checked && $('#s-pend').checked;
+function updateAvisoField(){
+  $('#f-aviso-wrap').classList.toggle('hidden', !avisoVisivel());
+  const on = formAvisos.length > 0;
+  $('#f-aviso').checked = on;
+  $('#f-aviso-alt').classList.toggle('hidden', !on);
+  const nomes = [formAvisos.includes('vespera') && 'no dia anterior', formAvisos.includes('dia') && 'no dia do vencimento'].filter(Boolean);
+  $('#f-aviso-resumo').textContent = on ? 'Avisar ' + nomes.join(' e ') + ` às ${AVISO_HORA}h` : 'Sem aviso';
+}
+function quandoTxt(diasAntes){
+  if (!fData.value) return '';
+  const [y, m, d] = fData.value.split('-').map(Number);
+  const at = new Date(y, m - 1, d - diasAntes, AVISO_HORA);
+  const txt = at.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' }) + ` às ${AVISO_HORA}h`;
+  return at <= new Date() ? txt + ' · já passou' : txt;
+}
+function openAvisoModal(){
+  $('#av-vespera').checked = formAvisos.includes('vespera');
+  $('#av-dia').checked = formAvisos.includes('dia');
+  $('#av-vespera-q').textContent = quandoTxt(1);
+  $('#av-dia-q').textContent = quandoTxt(0);
+  $('#aviso-modal-hora').textContent = AVISO_HORA + 'h';
+  $('#aviso-modal').hidden = false;
+}
+function closeAvisoModal(){ $('#aviso-modal').hidden = true; updateAvisoField(); }
+$('#f-aviso').addEventListener('change', e => {
+  if (e.target.checked) { e.target.checked = false; openAvisoModal(); }
+  else { formAvisos = []; updateAvisoField(); }
+});
+$('#f-aviso-alt').addEventListener('click', e => { e.preventDefault(); openAvisoModal(); });
+$('#av-cancel').addEventListener('click', closeAvisoModal);
+$('#aviso-modal').addEventListener('click', e => { if (e.target.id === 'aviso-modal') closeAvisoModal(); });
+$('#av-ok').addEventListener('click', () => {
+  formAvisos = [$('#av-vespera').checked && 'vespera', $('#av-dia').checked && 'dia'].filter(Boolean);
+  closeAvisoModal();
+});
 
 // valor: digita só números, preenche da direita (centavos)
 fValor.addEventListener('input', () => {
@@ -811,6 +967,8 @@ $('#form').addEventListener('submit', async e => {
     id: editingId || uid(), data: fData.value, descricao,
     tipo: document.querySelector('input[name=tipo]:checked').value,
     situacao: document.querySelector('input[name=situacao]:checked').value,
+    // no iPhone/navegador o campo não aparece: mantém o que já estava salvo
+    avisos: avisoVisivel() ? formAvisos.slice() : (isEdit && origAvisos !== undefined ? origAvisos : []),
     categoria, valor: cents / 100
   };
   enqueue(isEdit ? 'update' : 'add', rec);
@@ -862,8 +1020,35 @@ function renderConfig(){
     $('#acc-email').textContent = session.email;
     $('#acc-avatar').textContent = (session.nome || session.email).charAt(0).toUpperCase();
   }
-  renderHist(); renderSyncInfo();
+  renderHist(); renderSyncInfo(); renderAvisos();
+  if (Native.on) Native.refreshPerms().then(renderAvisos);
 }
+function renderAvisos(){
+  const box = $('#avisos-box'); if (!box) return;
+  box.classList.toggle('hidden', !Native.on || !session);
+  if (!Native.on || !session) return;
+  const st = Native.status;
+  const line = (label, ok, okTxt, noTxt) => `<li><span>${label}</span><span class="${ok ? 'ok' : 'no'}">${ok ? okTxt : noTxt}</span></li>`;
+  $('#aviso-status').innerHTML =
+    line('Notificações', st.perm === 'granted', 'permitidas', st.perm === '?' ? 'verificando…' : 'bloqueadas') +
+    line('Horário exato', st.exact === 'granted', 'sim', 'aproximado') +
+    `<li><span>Horário dos avisos</span><span>${AVISO_HORA}h, nos dias escolhidos em cada conta</span></li>` +
+    (st.error ? `<li><span>Erro</span><span class="no">${esc(st.error)}</span></li>` : '') +
+    (st.perm !== 'granted' && st.perm !== '?' ? `<li><span class="hint" style="margin:0">Libere em Configurações → Apps → Minhas Contas → Notificações.</span></li>` : '');
+  $('#btn-aviso-exato').classList.toggle('hidden', st.exact === 'granted');
+  const items = st.scheduled.slice(0, 8);
+  $('#aviso-list').innerHTML = items.length
+    ? items.map(n => `<li><b>${esc(n.title)}</b><span>${esc(fmtAviso(n.at))} · ${esc(n.body)}</span></li>`).join('')
+    : '<li><span>Nenhum aviso agendado. Cadastre um pagamento "A pagar" com vencimento futuro.</span></li>';
+}
+$('#btn-aviso-teste').addEventListener('click', async () => {
+  try { await Native.test(); toast('Aviso de teste enviado. Confira a barra de notificações.'); }
+  catch (e) { toast('Não foi possível: ' + (e.message || e)); }
+});
+$('#btn-aviso-exato').addEventListener('click', async () => {
+  try { await Native.LN.changeExactNotificationSetting(); } catch {}
+  await Native.refreshPerms(); await Native.scheduleNow(); renderAvisos();
+});
 function renderHist(){
   const ul = $('#hist');
   ul.innerHTML = urlHist.map((u, i) => `<li>
