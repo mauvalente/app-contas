@@ -85,6 +85,29 @@ main{padding:0 16px calc(var(--foot) + env(safe-area-inset-bottom) + 24px);max-w
 
 .mh-prev{font-size:12px;color:var(--muted);margin-top:2px;padding-right:30px}
 .row.is-pend .row-desc{opacity:.75}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:var(--bg);font-weight:600;color:var(--muted);font-size:14px}
+.chips button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.chips button.hidden{display:none}
+.chip.ccard{background:#e8e4fb;color:#4c3a9e}
+.chip.forma{background:var(--surface-2);color:var(--muted)}
+@media (prefers-color-scheme: dark){.chip.ccard{background:#2c2550;color:#c4b8ff}}
+.cards-box{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--border);overflow:hidden}
+.cards-box h2{margin:0;font-size:17px;padding:14px 16px 6px}
+.cc{padding:10px 16px 12px;border-top:1px solid var(--border)}
+.cc:first-of-type{border-top:0}
+.cc-name{font-weight:650;margin-bottom:4px}
+.cc-line{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;padding:3px 0}
+.cc-line .lbl2{color:var(--muted);font-size:13px}
+.cc-line .v{font-weight:650;white-space:nowrap}
+.cc-line .act{display:flex;align-items:center;gap:8px}
+.cc-ok{color:var(--in);font-size:13px;font-weight:600;white-space:nowrap}
+.card-list{list-style:none;margin:0;padding:0}
+.card-list li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.card-list li:last-child{border-bottom:0}
+.card-list .t{flex:1;min-width:0}
+.card-list .t span{display:block;font-size:13px;color:var(--muted)}
+.modal .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .chip.bell{background:var(--accent-soft);color:var(--accent)}
 .chip.pend{background:var(--warn-soft);color:var(--warn)}
 .chip.late{background:var(--out);color:#fff}
@@ -259,6 +282,24 @@ body.form-mode .toast{bottom:24px}
       </div>
 
       <div class="field">
+        <span class="lbl">Forma de pagamento <span class="opt">(opcional)</span></span>
+        <div class="chips" id="f-forma" role="group" aria-label="Forma de pagamento">
+          <button type="button" data-forma="pix">Pix</button>
+          <button type="button" data-forma="credito">💳 Crédito</button>
+          <button type="button" data-forma="debito">Débito</button>
+          <button type="button" data-forma="boleto">Boleto</button>
+          <button type="button" data-forma="dinheiro">Dinheiro</button>
+          <button type="button" data-forma="fatura">Fatura do cartão</button>
+        </div>
+      </div>
+
+      <div class="field hidden" id="f-cartao-wrap">
+        <span class="lbl">Cartão</span>
+        <div class="chips" id="f-cartao" role="group" aria-label="Cartão"></div>
+        <p class="hint" id="f-cartao-hint"></p>
+      </div>
+
+      <div class="field" id="f-sit-wrap">
         <span class="lbl">Situação</span>
         <div class="seg" role="radiogroup" aria-label="Situação">
           <input type="radio" name="situacao" id="s-ok" value="pago" checked>
@@ -340,6 +381,15 @@ body.form-mode .toast{bottom:24px}
       </div>
     </form>
 
+    <div id="cartoes-box" class="hidden">
+      <h2 class="section-title">Cartões de crédito</h2>
+      <div class="card">
+        <ul class="card-list" id="card-list"></ul>
+        <p class="hint" id="card-empty">Cadastre seus cartões para ver a prévia de cada fatura na tela inicial.</p>
+        <div class="row-btns"><button type="button" class="btn small" id="btn-card-add">+ Adicionar cartão</button></div>
+      </div>
+    </div>
+
     <h2 class="section-title">URLs já utilizadas</h2>
     <ul class="hist" id="hist"></ul>
     <p class="hint" id="hist-empty">Nenhuma ainda. Ao salvar uma URL ela aparece aqui para reutilizar. O ✕ remove só deste aparelho.</p>
@@ -394,6 +444,23 @@ body.form-mode .toast{bottom:24px}
   </div>
 </div>
 
+<div class="modal" id="card-modal" hidden role="dialog" aria-modal="true" aria-labelledby="card-modal-t">
+  <form class="sheet" id="card-form" novalidate>
+    <h3 id="card-modal-t">Cartão de crédito</h3>
+    <p>Compras a partir do dia do fechamento entram na fatura seguinte.</p>
+    <div class="field"><label class="lbl" for="cm-nome">Nome</label><input class="input" id="cm-nome" maxlength="40" placeholder="Ex.: Nubank" autocomplete="off"></div>
+    <div class="row2">
+      <div class="field"><label class="lbl" for="cm-fecha">Dia do fechamento</label><input class="input num" id="cm-fecha" type="number" inputmode="numeric" min="1" max="31"></div>
+      <div class="field"><label class="lbl" for="cm-vence">Dia do vencimento</label><input class="input num" id="cm-vence" type="number" inputmode="numeric" min="1" max="31"></div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" id="cm-cancel">Cancelar</button>
+      <button type="submit" class="btn primary" id="cm-ok">Salvar</button>
+    </div>
+    <button type="button" class="btn danger hidden" id="cm-del">Remover cartão</button>
+  </form>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ponte do Capacitor: só faz algo dentro do app Android; no navegador/iPhone fica inativa -->
@@ -416,6 +483,8 @@ let records = [];
 // fila de alterações ainda não enviadas: {op:'add'|'update'|'delete', record, email}
 let queue = store.get(K.pend, []).map(q => q.op ? q : { op:'add', record:q });
 const recsKey = () => K.recs + '.' + (session ? session.email : '');
+const cardsKey = () => 'contas.cartoes.' + (session ? session.email : '');
+let cartoes = [];   // [{ id, nome, fecha, vence }] — cadastrados em Ajustes, guardados no script
 const myQueue = () => session ? queue.filter(q => q.email === session.email) : [];
 function loadUserData(){
   if (session) {
@@ -424,6 +493,7 @@ function loadUserData(){
     saveQueue();
   }
   records = session ? store.get(recsKey(), []) : [];
+  cartoes = session ? store.get(cardsKey(), []) : [];
   firstRender = true; openMonths.clear();
 }
 function saveRecords(){ if (session) store.set(recsKey(), records); }
@@ -568,7 +638,7 @@ const fmtAviso = at => {
 };
 
 /* ================= versão do script ================= */
-const SCRIPT_MIN = 3;      // versão mínima do Code.gs que este app precisa
+const SCRIPT_MIN = 4;      // versão mínima do Code.gs que este app precisa
 let scriptVersao = null;   // null = ainda não sabemos
 function setScriptVersao(v){ scriptVersao = Number(v) || 1; renderScriptWarn(); } // scripts antigos não mandam versão
 function renderScriptWarn(){
@@ -610,6 +680,7 @@ async function sync({ silent } = {}){
     await flush();
     const data = await api('list');
     records = data.records || [];
+    if (Array.isArray(data.cartoes)) { cartoes = data.cartoes; store.set(cardsKey(), cartoes); }
     setScriptVersao(data.versao);
     if (data.user) { session.nome = data.user.nome; store.set(K.sess, session); }
     saveRecords();
@@ -694,7 +765,7 @@ function render(){
 
   const today = todayISO();
   const pend = all.filter(isPend).sort((a, b) => a.data.localeCompare(b.data));
-  let html = '';
+  let html = cardsHtml(all, today);
   if (pend.length) {
     const aPagar = pend.filter(r => r.tipo === 'pagamento').reduce((t, r) => t + +r.valor, 0);
     html += `<section class="due" aria-label="A vencer">
@@ -715,20 +786,23 @@ function render(){
   html += keys.map(key => {
     const items = groups.get(key).sort((a, b) => b.data.localeCompare(a.data));
     // saldo só com o que já foi pago/recebido; o pendente aparece como "previsto"
-    let ent = 0, sai = 0, pEnt = 0, pSai = 0;
+    // compras no crédito não saem do saldo no dia: entram quando a fatura é paga
+    let ent = 0, sai = 0, pEnt = 0, pSai = 0, cred = 0;
     items.forEach(r => {
       const v = +r.valor, inn = r.tipo === 'recebimento';
-      if (isPend(r)) inn ? pEnt += v : pSai += v;
+      if (isCredito(r)) cred += v;
+      else if (isPend(r)) inn ? pEnt += v : pSai += v;
       else inn ? ent += v : sai += v;
     });
     const saldo = ent - sai;
     const open = openMonths.has(key);
     const prev = [pSai ? `a pagar ${brl.format(pSai)}` : '', pEnt ? `a receber ${brl.format(pEnt)}` : ''].filter(Boolean).join(' · ');
+    const credTxt = cred ? `<div class="mh-prev num">No cartão de crédito: ${brl.format(cred)} (entra nas faturas)</div>` : '';
     return `<section class="month${open ? ' open' : ''}" data-key="${key}">
       <button class="month-head" aria-expanded="${open}">
         <div class="mh-top"><span class="mh-title">${monthLabel(key)}</span><span class="mh-total num ${saldo >= 0 ? 'pos' : 'neg'}">${brl.format(saldo)}</span>${IC_CHEV}</div>
         <div class="mh-sub"><span>${items.length} ${items.length === 1 ? 'registro' : 'registros'}</span><span class="mh-split num"><span class="i">+${brl.format(ent)}</span> · <span class="o">−${brl.format(sai)}</span></span></div>
-        ${prev ? `<div class="mh-prev num">Previsto: ${prev}</div>` : ''}
+        ${prev ? `<div class="mh-prev num">Previsto: ${prev}</div>` : ''}${credTxt}
       </button>
       <ul class="rows"${open ? '' : ' hidden'}>
         ${items.map(r => rowHtml(r, { today })).join('')}
@@ -740,6 +814,52 @@ function render(){
 }
 
 function isPend(r){ return r.situacao === 'pendente'; }
+const isCredito = r => r.forma === 'credito';
+
+/* ---- faturas: em qual fatura cai uma compra no crédito ---- */
+const isoOf = (y, m, d) => { const dt = new Date(y, m - 1, d); return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`; };
+const clampDay = (y, m, d) => Math.min(d, new Date(y, m, 0).getDate());
+function faturaDe(card, iso){
+  let [y, m, d] = iso.split('-').map(Number);
+  if (d >= card.fecha) { m++; if (m > 12) { m = 1; y++; } }       // a partir do fechamento → próxima fatura
+  const fecha = isoOf(y, m, clampDay(y, m, card.fecha));
+  let vy = y, vm = m;
+  if (card.vence <= card.fecha) { vm++; if (vm > 12) { vm = 1; vy++; } } // vence no mês seguinte ao fechamento
+  const vence = isoOf(vy, vm, clampDay(vy, vm, card.vence));
+  return { fecha, vence };
+}
+const cardByName = nome => cartoes.find(c => norm(c.nome) === norm(nome || ''));
+function vencimentoFatura(r){
+  const c = cardByName(r.cartao);
+  return c ? faturaDe(c, r.data).vence : (r.fatura || '');
+}
+const fmtDM = iso => { const [, m, d] = iso.split('-'); return `${d}/${m}`; };
+// pagamento lançado para a fatura do cartão que vence em `vence` (mesmo mês)
+const pagamentoDaFatura = (all, nome, vence) => all.find(r => r.forma === 'fatura' && norm(r.cartao) === norm(nome) && (r.data || '').slice(0, 7) === vence.slice(0, 7));
+
+function cardsHtml(all, today){
+  if (!cartoes.length) return '';
+  const blocks = cartoes.map(c => {
+    const compras = all.filter(r => isCredito(r) && norm(r.cartao) === norm(c.nome));
+    const porFatura = new Map();
+    compras.forEach(r => { const f = faturaDe(c, r.data); const k = f.vence;
+      if (!porFatura.has(k)) porFatura.set(k, { ...f, total:0, n:0 }); const g = porFatura.get(k); g.total += +r.valor; g.n++; });
+    const aberta = faturaDe(c, today);
+    const atual = porFatura.get(aberta.vence) || { ...aberta, total:0, n:0 };
+    let html = `<div class="cc"><div class="cc-name">💳 ${esc(c.nome)}</div>
+      <div class="cc-line"><span><span class="lbl2">Fatura aberta · fecha ${fmtDM(atual.fecha)} · vence ${fmtDM(atual.vence)}</span></span><span class="v num">${brl.format(atual.total)}</span></div>`;
+    // faturas já fechadas (até 2 meses), com o pagamento lançado ou não
+    [...porFatura.values()].filter(f => f.fecha <= today && f.vence >= isoOf(+today.slice(0,4), +today.slice(5,7) - 2, 1))
+      .sort((a, b) => b.vence.localeCompare(a.vence)).forEach(f => {
+        const pg = pagamentoDaFatura(all, c.nome, f.vence);
+        const st = pg ? (isPend(pg) ? '<span class="cc-ok" style="color:var(--warn)">a pagar</span>' : '<span class="cc-ok">paga ✓</span>')
+          : `<button type="button" class="pay" data-fatura="${esc(c.id)}|${f.vence}|${f.total}">Lançar pagamento</button>`;
+        html += `<div class="cc-line"><span class="lbl2">Fechada · vence ${fmtDM(f.vence)}</span><span class="act">${st}<span class="v num">${brl.format(f.total)}</span></span></div>`;
+      });
+    return html + '</div>';
+  }).join('');
+  return `<section class="cards-box" aria-label="Cartões"><h2>Cartões</h2>${blocks}</section>`;
+}
 function daysBetween(a, b){
   const [y1, m1, d1] = a.split('-').map(Number), [y2, m2, d2] = b.split('-').map(Number);
   return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 864e5);
@@ -752,6 +872,12 @@ function dueChip(r, today){
   if (n === 1) return `<span class="chip soon">${inn ? 'Previsto para amanhã' : 'Vence amanhã'}</span>`;
   return `<span class="chip pend">${inn ? 'A receber' : 'A pagar'}</span>`;
 }
+const FORMA_NOME = { pix:'Pix', credito:'Crédito', debito:'Débito', boleto:'Boleto', dinheiro:'Dinheiro', fatura:'Fatura' };
+function formaChip(r){
+  if (isCredito(r)) { const v = vencimentoFatura(r); return `<span class="chip ccard" title="${v ? 'Fatura que vence em ' + fmtDM(v) : ''}">💳 ${esc(r.cartao || 'Crédito')}</span>`; }
+  if (r.forma === 'fatura') return `<span class="chip ccard">Fatura ${esc(r.cartao || '')}</span>`;
+  return r.forma && FORMA_NOME[r.forma] ? `<span class="chip forma">${FORMA_NOME[r.forma]}</span>` : '';
+}
 function bellChip(r){
   const n = isPend(r) && Native.nextFor(r.id);
   return n ? `<span class="chip bell" title="Próximo aviso">🔔 ${fmtAviso(n.at)}</span>` : '';
@@ -763,7 +889,7 @@ function rowHtml(r, { due, today }){
     <span class="badge ${inn ? 'in' : 'out'}" title="${inn ? 'Recebimento' : 'Pagamento'}">${inn ? IC_IN : IC_OUT}</span>
     <div class="row-mid">
       <div class="row-desc">${mdToHtml(r.descricao || '')}</div>
-      <div class="row-meta"><span class="num">${fmtDay(r.data)}</span>${pend ? dueChip(r, today) : ''}${bellChip(r)}${r.categoria ? `<span class="chip">${esc(r.categoria)}</span>` : ''}${r._pending ? '<span class="pending">● aguardando envio</span>' : ''}</div>
+      <div class="row-meta"><span class="num">${fmtDay(r.data)}</span>${pend ? dueChip(r, today) : ''}${bellChip(r)}${formaChip(r)}${r.categoria ? `<span class="chip">${esc(r.categoria)}</span>` : ''}${r._pending ? '<span class="pending">● aguardando envio</span>' : ''}</div>
     </div>
     <div class="row-right">
       <span class="row-val num ${inn ? 'pos' : 'neg'}">${inn ? '+' : '−'}${brl.format(+r.valor)}</span>
@@ -772,7 +898,18 @@ function rowHtml(r, { due, today }){
   </li>`;
 }
 
+let prefill = null; // dados para abrir o formulário já preenchido
 $('#list').addEventListener('click', e => {
+  const fat = e.target.closest('[data-fatura]');
+  if (fat) {
+    const [id, vence, total] = fat.dataset.fatura.split('|');
+    const c = cartoes.find(x => x.id === id); if (!c) return;
+    const [vy, vm] = vence.split('-').map(Number);
+    const mes = new Date(vy, vm - 1, 1).toLocaleDateString('pt-BR', { month:'short', year:'numeric' }).replace('.', '');
+    prefill = { data: vence, tipo:'pagamento', forma:'fatura', cartao: c.nome, valor: +total,
+      situacao: vence > todayISO() ? 'pendente' : 'pago', descricao: `Fatura ${c.nome} (${mes})`, categoria: 'Cartão de crédito' };
+    return go('#/novo');
+  }
   const pay = e.target.closest('[data-pay]');
   if (pay) {
     const r = findRecord(pay.dataset.pay); if (!r) return;
@@ -800,7 +937,7 @@ $('#list').addEventListener('keydown', e => {
 
 /* ================= FORM ================= */
 const fData = $('#f-data'), fValor = $('#f-valor'), fDesc = $('#f-desc'), fCat = $('#f-cat'), catList = $('#cat-list');
-let cents = 0, editingId = null, sitTouched = false, formAvisos = [], origAvisos;
+let cents = 0, editingId = null, sitTouched = false, formAvisos = [], origAvisos, formForma = '', formCartao = '';
 
 function resetForm(){
   fData.value = todayISO();
@@ -815,6 +952,8 @@ function resetForm(){
   $('#s-ok').checked = true;
   updateSitLabels();
   formAvisos = []; origAvisos = undefined;
+  formForma = store.get('contas.ultimaForma', ''); formCartao = store.get('contas.ultimoCartao', '');
+  updateFormaField();
   updateAvisoField();
   $('#btn-delete').classList.add('hidden');
   disarmDelete();
@@ -832,6 +971,8 @@ function fillForm(r){
   updateSitLabels();
   origAvisos = r.avisos;
   formAvisos = isPend(r) && r.tipo === 'pagamento' ? avisosDe(r).slice() : [];
+  formForma = r.forma || ''; formCartao = r.cartao || '';
+  updateFormaField();
   updateAvisoField();
   $('#btn-delete').classList.remove('hidden');
 }
@@ -852,10 +993,46 @@ fData.addEventListener('change', () => {
   updateAvisoField();
 });
 document.querySelectorAll('input[name=situacao]').forEach(i => i.addEventListener('change', () => { sitTouched = true; updateAvisoField(); }));
-document.querySelectorAll('input[name=tipo]').forEach(i => i.addEventListener('change', () => { updateSitLabels(); updateAvisoField(); }));
+document.querySelectorAll('input[name=tipo]').forEach(i => i.addEventListener('change', () => { updateSitLabels(); updateFormaField(); updateAvisoField(); }));
+
+// ---- forma de pagamento e cartão
+function updateFormaField(){
+  const inn = $('#t-in').checked;
+  // crédito e fatura só fazem sentido em pagamento
+  if (inn && (formForma === 'credito' || formForma === 'fatura')) formForma = '';
+  document.querySelectorAll('#f-forma button').forEach(b => {
+    b.classList.toggle('hidden', inn && (b.dataset.forma === 'credito' || b.dataset.forma === 'fatura'));
+    b.setAttribute('aria-pressed', b.dataset.forma === formForma);
+  });
+  const usaCartao = formForma === 'credito' || formForma === 'fatura';
+  $('#f-cartao-wrap').classList.toggle('hidden', !usaCartao);
+  if (usaCartao) {
+    if (!formCartao && cartoes.length === 1) formCartao = cartoes[0].nome; // um cartão só: já vem escolhido
+    const nomes = cartoes.map(c => c.nome);
+    if (formCartao && !nomes.some(n => norm(n) === norm(formCartao))) nomes.push(formCartao);
+    $('#f-cartao').innerHTML = nomes.map(n => `<button type="button" data-cartao="${esc(n)}" aria-pressed="${norm(n) === norm(formCartao)}">${esc(n)}</button>`).join('');
+    const c = cardByName(formCartao);
+    $('#f-cartao-hint').innerHTML = !cartoes.length ? 'Cadastre seus cartões em <b>Ajustes → Cartões de crédito</b>.'
+      : formForma === 'credito' && c && fData.value ? `Entra na fatura que vence em <b>${fmtDM(faturaDe(c, fData.value).vence)}</b>.` : '';
+  }
+  // compra no crédito já está feita: situação e aviso não se aplicam (quem vence é a fatura)
+  const credito = formForma === 'credito';
+  $('#f-sit-wrap').classList.toggle('hidden', credito);
+  if (credito) $('#s-ok').checked = true;
+}
+$('#f-forma').addEventListener('click', e => {
+  const b = e.target.closest('button[data-forma]'); if (!b) return;
+  formForma = formForma === b.dataset.forma ? '' : b.dataset.forma;  // tocar de novo desmarca
+  updateFormaField(); updateAvisoField();
+});
+$('#f-cartao').addEventListener('click', e => {
+  const b = e.target.closest('button[data-cartao]'); if (!b) return;
+  formCartao = b.dataset.cartao; updateFormaField();
+});
+fData.addEventListener('change', updateFormaField);
 
 // ---- aviso opcional (só no app Android, pagamento "A pagar")
-const avisoVisivel = () => Native.on && $('#t-out').checked && $('#s-pend').checked;
+const avisoVisivel = () => Native.on && $('#t-out').checked && $('#s-pend').checked && formForma !== 'credito';
 function updateAvisoField(){
   $('#f-aviso-wrap').classList.toggle('hidden', !avisoVisivel());
   const on = formAvisos.length > 0;
@@ -994,15 +1171,22 @@ $('#form').addEventListener('submit', async e => {
   const found = categories().find(c => norm(c) === norm(categoria));
   if (found) categoria = found;
 
+  const usaCartao = formForma === 'credito' || formForma === 'fatura';
+  if (usaCartao && !formCartao) return toast(cartoes.length ? 'Escolha o cartão' : 'Cadastre o cartão em Ajustes primeiro');
+
   const isEdit = !!editingId;
+  const credito = formForma === 'credito';
   const rec = {
     id: editingId || uid(), data: fData.value, descricao,
     tipo: document.querySelector('input[name=tipo]:checked').value,
-    situacao: document.querySelector('input[name=situacao]:checked').value,
+    situacao: credito ? 'pago' : document.querySelector('input[name=situacao]:checked').value,
     // no iPhone/navegador o campo não aparece: mantém o que já estava salvo
-    avisos: avisoVisivel() ? formAvisos.slice() : (isEdit && origAvisos !== undefined ? origAvisos : []),
+    avisos: credito ? [] : avisoVisivel() ? formAvisos.slice() : (isEdit && origAvisos !== undefined ? origAvisos : []),
+    forma: formForma, cartao: usaCartao ? formCartao : '',
     categoria, valor: cents / 100
   };
+  rec.fatura = credito ? vencimentoFatura(rec) : '';
+  if (!isEdit) { store.set('contas.ultimaForma', formForma); if (usaCartao) store.set('contas.ultimoCartao', formCartao); }
   enqueue(isEdit ? 'update' : 'add', rec);
   openMonths.add(rec.data.slice(0, 7));
   render();
@@ -1052,9 +1236,51 @@ function renderConfig(){
     $('#acc-email').textContent = session.email;
     $('#acc-avatar').textContent = (session.nome || session.email).charAt(0).toUpperCase();
   }
-  renderHist(); renderSyncInfo(); renderAvisos();
+  renderHist(); renderSyncInfo(); renderAvisos(); renderCards();
   if (Native.on) Native.refreshPerms().then(renderAvisos);
 }
+function renderCards(){
+  $('#cartoes-box').classList.toggle('hidden', !session);
+  $('#card-list').innerHTML = cartoes.map(c => `<li><div class="t"><b>💳 ${esc(c.nome)}</b><span>fecha dia ${c.fecha} · vence dia ${c.vence}</span></div>
+    <button type="button" class="btn small" data-card-edit="${esc(c.id)}">Editar</button></li>`).join('');
+  $('#card-empty').classList.toggle('hidden', cartoes.length > 0);
+}
+let editingCard = null;
+function openCardModal(c){
+  editingCard = c || null;
+  $('#cm-nome').value = c ? c.nome : ''; $('#cm-fecha').value = c ? c.fecha : ''; $('#cm-vence').value = c ? c.vence : '';
+  $('#cm-del').classList.toggle('hidden', !c); $('#cm-del').classList.remove('armed'); $('#cm-del').textContent = 'Remover cartão';
+  $('#card-modal').hidden = false; setTimeout(() => $('#cm-nome').focus(), 50);
+}
+const closeCardModal = () => { $('#card-modal').hidden = true; };
+async function saveCards(lista, okMsg){
+  const btn = $('#cm-ok'); btn.disabled = true;
+  try {
+    const d = await api('cartoes', { cartoes: lista });
+    cartoes = d.cartoes; store.set(cardsKey(), cartoes);
+    closeCardModal(); renderCards(); render(); toast(okMsg);
+  } catch (e) { toast(e.offline ? 'Sem conexão: para salvar cartões é preciso internet' : 'Não salvou: ' + e.message); }
+  finally { btn.disabled = false; }
+}
+$('#btn-card-add').addEventListener('click', () => openCardModal(null));
+$('#card-list').addEventListener('click', e => { const b = e.target.closest('[data-card-edit]'); if (b) openCardModal(cartoes.find(c => c.id === b.dataset.cardEdit)); });
+$('#cm-cancel').addEventListener('click', closeCardModal);
+$('#card-modal').addEventListener('click', e => { if (e.target.id === 'card-modal') closeCardModal(); });
+$('#card-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const nome = $('#cm-nome').value.trim(), fecha = +$('#cm-fecha').value, vence = +$('#cm-vence').value;
+  if (!nome) return toast('Dê um nome ao cartão');
+  if (!(fecha >= 1 && fecha <= 31) || !(vence >= 1 && vence <= 31)) return toast('Os dias vão de 1 a 31');
+  if (cartoes.some(c => norm(c.nome) === norm(nome) && c !== editingCard)) return toast('Já existe um cartão com esse nome');
+  const novo = { id: editingCard ? editingCard.id : uid(), nome, fecha, vence };
+  const lista = editingCard ? cartoes.map(c => c.id === editingCard.id ? novo : c) : [...cartoes, novo];
+  saveCards(lista, editingCard ? 'Cartão atualizado ✓' : 'Cartão adicionado ✓');
+});
+$('#cm-del').addEventListener('click', () => {
+  const b = $('#cm-del');
+  if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = 'Toque de novo para remover'; return; }
+  saveCards(cartoes.filter(c => c.id !== editingCard.id), 'Cartão removido');
+});
 function renderAvisos(){
   const box = $('#avisos-box'); if (!box) return;
   box.classList.toggle('hidden', !Native.on || !session);
@@ -1212,6 +1438,17 @@ $('#btn-flush').addEventListener('click', async () => {
   renderSyncInfo();
 });
 
+function applyPrefill(p){
+  fData.value = p.data;
+  (p.tipo === 'recebimento' ? $('#t-in') : $('#t-out')).checked = true;
+  cents = Math.round(p.valor * 100); fValor.value = cents ? brl.format(cents / 100) : '';
+  fDesc.innerHTML = mdToHtml(p.descricao || '');
+  fCat.value = p.categoria || '';
+  (p.situacao === 'pendente' ? $('#s-pend') : $('#s-ok')).checked = true; sitTouched = true;
+  formForma = p.forma || ''; formCartao = p.cartao || '';
+  updateSitLabels(); updateFormaField(); updateAvisoField();
+}
+
 /* ================= navegação ================= */
 let inAppNav = false;
 function go(hash){ inAppNav = true; location.hash = hash; }
@@ -1232,6 +1469,7 @@ function route(){
   $('#btn-sync').classList.toggle('hidden', scr !== 'home');
   if (scr === 'form') {
     resetForm();
+    if (prefill && !editId) { applyPrefill(prefill); prefill = null; }
     if (editId) {
       const r = findRecord(editId);
       if (r) fillForm(r);

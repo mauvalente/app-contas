@@ -36,12 +36,13 @@ const SESSAO_DIAS = 180;
 
 // Versão do script: o app avisa quando a publicada for mais antiga que a que ele espera.
 // Aumente junto com SCRIPT_MIN no index.html sempre que o script ganhar campos novos.
-const SCRIPT_VERSAO = 3;
+const SCRIPT_VERSAO = 4;
 
-const HEADERS = ['ID', 'Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Criado em', 'Situação', 'Avisos'];
-const COL_SITUACAO = 8; // coluna H
-const COL_AVISOS = 9;   // coluna I
+const HEADERS = ['ID', 'Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Criado em', 'Situação', 'Avisos',
+                 'Forma', 'Cartão', 'Vencimento da fatura'];
+const COL_SITUACAO = 8; // coluna H (H em diante: Situação, Avisos, Forma, Cartão, Vencimento da fatura)
 const AVISO_NOMES = { vespera: 'Dia anterior', dia: 'No dia' };
+const FORMAS = { pix: 'Pix', credito: 'Crédito', debito: 'Débito', boleto: 'Boleto', dinheiro: 'Dinheiro', fatura: 'Fatura do cartão' };
 
 /* ---------- Endpoints ---------- */
 
@@ -69,7 +70,8 @@ function doPost(e) {
     lock.waitLock(15000);
     try {
       const sh = sheetFor_(user);
-      if (action === 'list') return json_({ ok: true, user: user, versao: SCRIPT_VERSAO, records: list_(sh) });
+      if (action === 'list') return json_({ ok: true, user: user, versao: SCRIPT_VERSAO, cartoes: getCartoes_(user), records: list_(sh) });
+      if (action === 'cartoes') return json_({ ok: true, cartoes: setCartoes_(user, body.cartoes) });
       if (action === 'add' || action === 'update') return json_(Object.assign({ ok: true }, upsert_(sh, body.record || {})));
       if (action === 'delete') return json_(Object.assign({ ok: true }, delete_(sh, body.record || {})));
     } finally {
@@ -177,11 +179,11 @@ function sheetFor_(user) {
     }
   }
   // abas criadas antes destes campos ganham os cabeçalhos novos
-  if (sh.getLastRow() > 0 && sh.getRange(1, COL_SITUACAO).getValue() === '') {
-    sh.getRange(1, COL_SITUACAO).setValue('Situação').setFontWeight('bold');
-  }
-  if (sh.getLastRow() > 0 && sh.getRange(1, COL_AVISOS).getValue() === '') {
-    sh.getRange(1, COL_AVISOS).setValue('Avisos').setFontWeight('bold');
+  if (sh.getLastRow() > 0) {
+    for (let c = COL_SITUACAO; c <= HEADERS.length; c++) {
+      if (sh.getRange(1, c).getValue() === '') sh.getRange(1, c).setValue(HEADERS[c - 1]).setFontWeight('bold');
+    }
+    sh.getRange('L:L').setNumberFormat('dd/mm/yyyy');
   }
   if (sh.getLastRow() === 0) {
     sh.appendRow(HEADERS);
@@ -206,6 +208,9 @@ function upsert_(sh, r) {
   const categoria = String(r.categoria || '').trim();
   const pendente = String(r.situacao || 'pago') === 'pendente';
   const avisos = avisosTexto_(r.avisos);
+  const forma = FORMAS[String(r.forma || '')] || '';
+  const cartao = String(r.cartao || '').trim().slice(0, 40);
+  const fatura = /^\d{4}-\d{2}-\d{2}$/.test(String(r.fatura || '')) ? parseDate_(String(r.fatura)) : '';
 
   if (!id) throw new Error('ID ausente');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) throw new Error('Data inválida');
@@ -226,10 +231,10 @@ function upsert_(sh, r) {
   const row = findRow_(sh, id);
   if (row > 0) {
     sh.getRange(row, 2, 1, values.length).setValues([values]);
-    sh.getRange(row, COL_SITUACAO, 1, 2).setValues([[situacao, avisos]]);
+    sh.getRange(row, COL_SITUACAO, 1, 5).setValues([[situacao, avisos, forma, safe_(cartao), fatura]]);
     return { id: id, updated: true };
   }
-  sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([[id].concat(values, [new Date(), situacao, avisos])]);
+  sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([[id].concat(values, [new Date(), situacao, avisos, forma, safe_(cartao), fatura])]);
   return { id: id, created: true };
 }
 
@@ -274,10 +279,39 @@ function list_(sh) {
       valor: Number(row[5]) || 0,
       // vazio (registros antigos) conta como pago
       situacao: /^a /i.test(String(row[7] || '').trim()) ? 'pendente' : 'pago',
-      avisos: avisosLista_(row[8])
+      avisos: avisosLista_(row[8]),
+      forma: formaChave_(row[9]),
+      cartao: String(row[10] || ''),
+      fatura: row[11] instanceof Date ? Utilities.formatDate(row[11], tz, 'yyyy-MM-dd') : ''
     });
   });
   return out;
+}
+
+/* ---------- Forma de pagamento e cartões ---------- */
+
+function formaChave_(texto) {
+  const t = String(texto || '').trim().toLowerCase();
+  for (const k in FORMAS) if (FORMAS[k].toLowerCase() === t) return k;
+  return '';
+}
+
+// Cartões de cada pessoa ficam nas propriedades do script: [{ id, nome, fecha, vence }]
+function getCartoes_(user) {
+  const raw = PropertiesService.getScriptProperties().getProperty('cartoes_' + user.email);
+  try { return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
+}
+
+function setCartoes_(user, lista) {
+  if (!Array.isArray(lista) || lista.length > 15) throw new Error('Lista de cartões inválida');
+  const dia = function (n) { n = Math.round(Number(n)); if (!(n >= 1 && n <= 31)) throw new Error('Dia inválido'); return n; };
+  const limpa = lista.map(function (c) {
+    const nome = String(c.nome || '').trim().slice(0, 40);
+    if (!nome) throw new Error('Cartão sem nome');
+    return { id: String(c.id || Utilities.getUuid()).slice(0, 40), nome: nome, fecha: dia(c.fecha), vence: dia(c.vence) };
+  });
+  PropertiesService.getScriptProperties().setProperty('cartoes_' + user.email, JSON.stringify(limpa));
+  return limpa;
 }
 
 /* ---------- Avisos ---------- */

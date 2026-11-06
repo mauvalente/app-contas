@@ -74,14 +74,24 @@ Anote o endereço, sem barra no final. Ele é usado no passo 2.
 - **＋**: data (hoje por padrão; toque para abrir o calendário), tipo, valor, descrição com **negrito**, *itálico* e emojis, e categoria (digite uma nova ou escolha uma existente).
 - **Situação**: Pago / A pagar (ou Recebido / A receber). Escolher uma data futura já marca "A pagar".
 - **A vencer**: no topo da tela inicial, tudo que está pendente, com destaque para vencido, "vence hoje" e "vence amanhã". O botão **Paguei ✓** (ou **Recebi ✓**) marca na hora.
-- **Saldo do mês**: conta só o que já foi pago/recebido. O pendente aparece em "Previsto".
+- **Saldo do mês**: conta só o que já saiu ou entrou de fato. O pendente aparece em "Previsto", e as compras no crédito aparecem em "No cartão de crédito", porque o dinheiro só sai quando a fatura é paga.
+- **Forma de pagamento** (opcional): Pix, Crédito, Débito, Boleto, Dinheiro ou Fatura do cartão. O app lembra a última usada.
+  - **Crédito**: escolha o cartão. A compra conta como gasto (na categoria dela), mas não sai do saldo no dia. O app mostra em qual fatura ela entra.
+  - **Fatura do cartão**: o pagamento do boleto da fatura. Ele sai do saldo, mas **não é um gasto novo**: as compras dele já foram lançadas uma a uma.
+- **Cartões** (Ajustes → Cartões de crédito): nome, dia do fechamento e dia do vencimento. Compras a partir do dia do fechamento entram na fatura seguinte. Cada pessoa tem os próprios cartões.
+- **Prévia das faturas**: na tela inicial, cada cartão mostra a fatura aberta (somando as compras até agora) e as fechadas dos últimos meses. Numa fatura fechada, **Lançar pagamento** abre o formulário já preenchido (valor, vencimento, cartão), e o lançamento entra em "A vencer", podendo ter aviso.
 - **Editar / excluir**: toque num registro para editar. **Excluir registro** pede um segundo toque para confirmar.
 - **Engrenagem**: conta logada e botão Sair, URL do script e URLs já usadas (o ✕ remove do aparelho).
 - **Sem internet**: registros, edições e exclusões ficam no aparelho como "aguardando envio" e sobem quando a conexão voltar.
 - Linhas digitadas direto na planilha ganham um ID automático para poderem ser editadas pelo app.
 - Na planilha, negrito fica como `*texto*` e itálico como `_texto_`.
 - Na planilha, a coluna **H (Situação)** mostra Pago, A pagar, Recebido ou A receber. Registros antigos sem situação contam como pagos.
-- Ao atualizar os arquivos do app, aumente o número em `CACHE = 'contas-v6'` no `sw.js` para os celulares baixarem a versão nova.
+- Colunas **J (Forma)**, **K (Cartão)** e **L (Vencimento da fatura)**. Ao levar os dados para a planilha de gastos: some as categorias **sem** as linhas "Fatura do cartão", para não contar o mesmo gasto duas vezes. A coluna L diz em qual boleto cada compra no crédito será paga.
+- Ao atualizar os arquivos do app, aumente o número em `CACHE = 'contas-v7'` no `sw.js` para os celulares baixarem a versão nova.
+
+## Próximos passos (anotados)
+
+- **Compras parceladas no crédito**: lançar "3x de R$ 100" e o app criar uma compra por parcela, cada uma na fatura certa (mês a mês), ligadas entre si para editar ou excluir todas juntas.
 
 ## Testar no computador
 
