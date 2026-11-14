@@ -70,7 +70,8 @@ Anote o endereço, sem barra no final. Ele é usado no passo 2.
 ## Como funciona o app
 
 - **Cada pessoa vê só os próprios registros.** Os dados de todos só se juntam na planilha, cada um na sua aba.
-- **Tela inicial**: cards por mês/ano com o saldo do mês (recebido − pago) e os totais de entradas e saídas. Toque no card para abrir a lista.
+- **Tela inicial**: o mês atual no topo (recebido, pago, saldo, previsto e no cartão); **A vencer** em grupos que abrem e fecham (Vencidas, Hoje e amanhã, Esta semana, Mais tarde), e o app lembra quais você deixou abertos; **Cartões** com as faturas; gráfico dos **últimos 6 meses** (entradas × saídas); e a lista dos outros **meses**. Tocar num mês (ou numa barra do gráfico) abre a tela do mês.
+- **Tela do mês**: o resumo no topo e três abas. **Lançamentos**: o que vence no mês, agrupado, e a lista do que já foi pago ou recebido. **Por categoria**: gastos e recebimentos por categoria com barras e comparação com o mês anterior (as compras no crédito contam pela data da compra; pagamento de fatura fica de fora). **Cartões**: compras no crédito feitas no mês e as faturas que vencem nele.
 - **＋**: data (hoje por padrão; toque para abrir o calendário), tipo, valor, descrição com **negrito**, *itálico* e emojis, e categoria (digite uma nova ou escolha uma existente).
 - **Situação**: Pago / A pagar (ou Recebido / A receber). Escolher uma data futura já marca "A pagar".
 - **A vencer**: no topo da tela inicial, tudo que está pendente, com destaque para vencido, "vence hoje" e "vence amanhã". O botão **Paguei ✓** (ou **Recebi ✓**) marca na hora.
@@ -87,11 +88,16 @@ Anote o endereço, sem barra no final. Ele é usado no passo 2.
 - Na planilha, negrito fica como `*texto*` e itálico como `_texto_`.
 - Na planilha, a coluna **H (Situação)** mostra Pago, A pagar, Recebido ou A receber. Registros antigos sem situação contam como pagos.
 - Colunas **J (Forma)**, **K (Cartão)** e **L (Vencimento da fatura)**. Ao levar os dados para a planilha de gastos: some as categorias **sem** as linhas "Fatura do cartão", para não contar o mesmo gasto duas vezes. A coluna L diz em qual boleto cada compra no crédito será paga.
-- Ao atualizar os arquivos do app, aumente o número em `CACHE = 'contas-v7'` no `sw.js` para os celulares baixarem a versão nova.
+- Ao atualizar os arquivos do app, aumente o número em `CACHE = 'contas-v9'` no `sw.js` para os celulares baixarem a versão nova.
 
-## Próximos passos (anotados)
+## Compras parceladas
 
-- **Compras parceladas no crédito**: lançar "3x de R$ 100" e o app criar uma compra por parcela, cada uma na fatura certa (mês a mês), ligadas entre si para editar ou excluir todas juntas.
+- Ao cadastrar uma compra no **Crédito**, marque **Parcelado no cartão**, informe o **valor total** e o número de parcelas. O app divide (os centavos que sobram vão na 1ª) e mostra cada parcela com a fatura em que ela cai. **Cada valor pode ser editado.**
+- **Compra antiga**: use **Começa na parcela** (ex.: 5 de 10). Só as parcelas 5 a 10 são criadas, a partir da data informada.
+- Na **planilha**, cada parcela é uma linha, com a coluna **M (Parcela)**, por exemplo "5/10", e **N (Grupo da parcela)**, que liga as parcelas da mesma compra. A coluna L diz a fatura de cada uma.
+- No **app**, parcelas de meses que ainda não chegaram **não aparecem** nas listas nem nos totais do mês. Elas entram quando o mês chega, e já contam nas faturas de cada cartão.
+- **Parcelas** (atalho no fim do quadro Cartões): quanto está comprometido em cada mês, a partir de quando fica livre, e cada compra com o progresso ("4/10 pagas") e quanto falta.
+- Editar uma parcela: descrição, categoria e cartão mudam em **todas** as parcelas da compra; data e valor só naquela. Na edição dá para excluir só a parcela ou a compra inteira.
 
 ## Testar no computador
 

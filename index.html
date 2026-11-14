@@ -113,6 +113,74 @@ main{padding:0 16px calc(var(--foot) + env(safe-area-inset-bottom) + 24px);max-w
 .chip.late{background:var(--out);color:#fff}
 .chip.today{background:var(--warn);color:#fff}
 .chip.soon{background:var(--warn-soft);color:var(--warn)}
+.parc-body{margin-top:10px}
+.parc-body .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.parc-list{list-style:none;margin:8px 0 0;padding:0}
+.parc-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--border);font-size:14px}
+.parc-list li span{color:var(--muted);font-size:13px}
+.parc-list input{width:130px;min-height:38px;padding:6px 10px;border:1px solid var(--border);border-radius:10px;background:var(--bg);text-align:right;font-size:15px}
+.parc-list .more{border:0;background:transparent;color:var(--accent);font-weight:600;padding:8px 0;font-size:14px}
+.parc-info{background:var(--purple-soft,#e8e4fb);color:#4c3a9e;border-radius:12px;padding:10px 12px;font-size:14px}
+.pc-chart{display:flex;align-items:flex-end;gap:8px;height:120px;padding-top:4px}
+.pc-chart .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted)}
+.pc-chart .b i{display:block;width:100%;background:#7c6bd6;border-radius:4px 4px 0 0;min-height:2px}
+.pc-chart .b em{font-style:normal;font-size:10px;font-weight:700;color:var(--text);white-space:nowrap}
+.pc{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-top:1px solid var(--border)}
+.pc:first-of-type{border-top:0}
+.pc .t{flex:1;min-width:0}
+.pc .t b{display:block}
+.pc .t span{display:block;font-size:13px;color:var(--muted)}
+.pc .r2{text-align:right;white-space:nowrap}
+.pc .r2 b{display:block}
+.pc .r2 span{font-size:12px;color:var(--muted)}
+.prog{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-top:6px}
+.prog i{display:block;height:100%;background:#7c6bd6;border-radius:3px}
+.cc-link{width:100%;border:0;border-top:1px solid var(--border);background:transparent;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-size:14px;text-align:left}
+.cc-link .lbl2{color:var(--muted);font-size:13px}
+.cur{width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:12px;display:block}
+.cur-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cur-head h2{margin:0;font-size:17px}
+.cur-head span{color:var(--accent);font-weight:600;font-size:14px}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.kpi b{display:block;font-size:17px;white-space:nowrap}
+.kpi span{font-size:12px;color:var(--muted)}
+.cur-prev{font-size:13px;color:var(--muted);margin-top:8px}
+.gh{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;border:0;border-top:1px solid var(--border);background:transparent;padding:10px 16px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.gh .arr{display:inline-block;transition:transform .15s;margin-right:4px}
+.gh[aria-expanded=true] .arr{transform:rotate(90deg)}
+.gh .tot{text-transform:none;letter-spacing:0;font-size:13px}
+.due .rows{border-top:0;padding-top:0}
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px 10px;margin-bottom:12px}
+.chart-box h2{margin:0 0 4px;font-size:17px;display:flex;justify-content:space-between;align-items:baseline}
+.chart-box h2 small{font-size:12px;font-weight:500;color:var(--muted)}
+.chart-box h2 small i{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 3px 0 8px;vertical-align:0}
+.chart{display:flex;align-items:flex-end;gap:10px;height:118px;padding-top:6px}
+.chart .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:transparent;padding:0;font-size:11px;color:var(--muted)}
+.chart .bs{width:100%;height:92px;display:flex;gap:3px;align-items:flex-end}
+.chart .bs i{display:block;flex:1;border-radius:4px 4px 0 0;min-height:2px}
+.chart .e{background:#86d4a4}.chart .s{background:#f4a884}
+.chart .b.now .e{background:var(--in)}.chart .b.now .s{background:var(--out)}
+.chart .b.now{color:var(--text);font-weight:700}
+@media (prefers-color-scheme: dark){.chart .e{background:#1f5c3a}.chart .s{background:#6b3a22}}
+.mo{width:100%;text-align:left}
+.mo .chev{transform:rotate(-90deg)}
+.list-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 2px 8px}
+.tabs{display:flex;gap:6px;margin:0 0 12px;overflow-x:auto}
+.tabs button{border:1px solid var(--border);background:var(--surface);color:var(--muted);font-weight:600;font-size:14px;border-radius:999px;padding:8px 14px;white-space:nowrap}
+.tabs button[aria-selected=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.msum{padding:14px 16px}
+.msum .mh-sub,.msum .mh-prev{padding-right:0}
+.cats{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.cats h3{margin:0;padding:14px 16px 6px;font-size:15px;display:flex;justify-content:space-between}
+.cat-row{width:100%;border:0;border-top:1px solid var(--border);background:transparent;text-align:left;padding:10px 16px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.cat-row:first-of-type{border-top:0}
+.cat-row .n{font-weight:600}
+.cat-row .v{font-weight:650;white-space:nowrap;text-align:right}
+.cat-row .bar{grid-column:1/-1;height:7px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.cat-row .bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.cat-row .cmp{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.cat-row .up{color:var(--out)}.cat-row .down{color:var(--in)}
+.cats .rows{border-top:1px solid var(--border);background:var(--bg)}
 .due{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--warn);overflow:hidden}
 .due-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px}
 .due-head h2{margin:0;font-size:17px}
@@ -236,6 +304,9 @@ body.form-mode .toast{bottom:24px}
 <body>
 
 <header class="top">
+  <button class="icon-btn hidden" id="btn-back" aria-label="Voltar" style="margin-left:-10px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
   <h1 id="title">Minhas Contas</h1>
   <button class="icon-btn" id="btn-sync" aria-label="Atualizar da planilha" title="Atualizar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
@@ -250,6 +321,16 @@ body.form-mode .toast{bottom:24px}
       <span><b>Script da planilha desatualizado</b>Situação e avisos não estão sendo salvos na planilha. Toque para ver como atualizar.</span>
     </button>
     <div id="list"></div>
+  </section>
+
+  <!-- ============ MÊS ============ -->
+  <section class="screen" id="screen-month" aria-label="Mês">
+    <div id="month-view"></div>
+  </section>
+
+  <!-- ============ PARCELAS ============ -->
+  <section class="screen" id="screen-parcelas" aria-label="Parcelas">
+    <div id="parc-view"></div>
   </section>
 
   <!-- ============ LOGIN ============ -->
@@ -319,9 +400,26 @@ body.form-mode .toast{bottom:24px}
       </div>
 
       <div class="field">
-        <label class="lbl" for="f-valor">Valor</label>
+        <label class="lbl" for="f-valor" id="lbl-valor">Valor</label>
         <input class="input valor num" id="f-valor" inputmode="numeric" placeholder="R$ 0,00" value="">
       </div>
+
+      <!-- compra parcelada no crédito (só ao cadastrar) -->
+      <div class="field hidden" id="f-parc-wrap">
+        <label class="aviso-check" for="f-parc">
+          <input type="checkbox" id="f-parc">
+          <span class="t"><b>Parcelado no cartão</b><span id="f-parc-resumo">À vista</span></span>
+        </label>
+        <div class="parc-body hidden" id="f-parc-body">
+          <div class="row2">
+            <div><label class="lbl" for="f-parc-n">Parcelas</label><input class="input num" id="f-parc-n" type="number" inputmode="numeric" min="2" max="48" value="2"></div>
+            <div><label class="lbl" for="f-parc-ini">Começa na parcela</label><input class="input num" id="f-parc-ini" type="number" inputmode="numeric" min="1" max="48" value="1"></div>
+          </div>
+          <p class="hint" id="f-parc-hint"></p>
+          <ul class="parc-list" id="f-parc-list"></ul>
+        </div>
+      </div>
+      <div class="field hidden" id="f-parc-info"><div class="parc-info" id="f-parc-info-txt"></div></div>
 
       <div class="field">
         <span class="lbl" id="lbl-desc">Descrição</span>
@@ -345,6 +443,7 @@ body.form-mode .toast{bottom:24px}
         <button type="submit" class="btn primary" id="btn-save">Salvar</button>
       </div>
       <button type="button" class="btn danger hidden" id="btn-delete">Excluir registro</button>
+      <button type="button" class="btn danger hidden" id="btn-delete-all">Excluir a compra inteira (todas as parcelas)</button>
     </form>
   </section>
 
@@ -418,9 +517,9 @@ body.form-mode .toast{bottom:24px}
 </main>
 
 <footer class="bar">
-  <button class="nav active" id="nav-home" aria-label="Registros">
+  <button class="nav active" id="nav-home" aria-label="Início">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M8 14h4M8 17h7"/></svg>
-    Registros
+    Início
   </button>
   <button class="fab" id="nav-add" aria-label="Adicionar conta">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -494,11 +593,8 @@ function loadUserData(){
   }
   records = session ? store.get(recsKey(), []) : [];
   cartoes = session ? store.get(cardsKey(), []) : [];
-  firstRender = true; openMonths.clear();
 }
 function saveRecords(){ if (session) store.set(recsKey(), records); }
-const openMonths = new Set();
-let firstRender = true;
 
 /* ================= helpers ================= */
 const $ = s => document.querySelector(s);
@@ -638,7 +734,7 @@ const fmtAviso = at => {
 };
 
 /* ================= versão do script ================= */
-const SCRIPT_MIN = 4;      // versão mínima do Code.gs que este app precisa
+const SCRIPT_MIN = 5;      // versão mínima do Code.gs que este app precisa
 let scriptVersao = null;   // null = ainda não sabemos
 function setScriptVersao(v){ scriptVersao = Number(v) || 1; renderScriptWarn(); } // scripts antigos não mandam versão
 function renderScriptWarn(){
@@ -726,11 +822,13 @@ function flush(){
   if (!cfg.url || !session || !myQueue().length) return Promise.resolve();
   return flushing || (flushing = (async () => {
     try {
-      let q;
-      while (session && (q = myQueue()[0])) {
-        await api(q.op, { record: q.record });
-        records = applyOps(records, [q], false);
-        queue = queue.filter(x => x !== q);
+      let lote;
+      while (session && (lote = myQueue().slice(0, 40)).length) {
+        // script novo aceita várias alterações numa chamada (as parcelas de uma compra vão juntas)
+        if (lote.length > 1 && scriptVersao >= 5) await api('batch', { ops: lote.map(q => ({ action: q.op, record: q.record })) });
+        else { lote = lote.slice(0, 1); await api(lote[0].op, { record: lote[0].record }); }
+        records = applyOps(records, lote, false);
+        queue = queue.filter(x => !lote.includes(x));
         saveRecords(); saveQueue();
       }
     } finally { flushing = null; }
@@ -744,73 +842,198 @@ const IC_CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="curre
 
 function allRecords(){ return applyOps(records, myQueue(), true); }
 function findRecord(id){ return allRecords().find(r => r.id === id); }
+// parcelas de meses que ainda não chegaram ficam só na planilha, nas faturas e na tela de Parcelas
+const isFutureParcel = r => !!r.grupo && r.data > todayISO();
+const visibleRecords = all => all.filter(r => !isFutureParcel(r));
+const addMonthsISO = (iso, n) => { const [y, m, d] = iso.split('-').map(Number); const t = new Date(y, m - 1 + n, 1);
+  const ty = t.getFullYear(), tm = t.getMonth() + 1; return isoOf(ty, tm, clampDay(ty, tm, d)); };
 
 let rendering = false;
 document.addEventListener('avisos-atualizados', () => {
   rendering = true; try { render(); } finally { rendering = false; }
   if (location.hash === '#/config') renderAvisos();
 });
-function render(){
-  const list = $('#list');
-  const all = allRecords();
+function monthStats(items){
+  // saldo só com o que já foi pago/recebido; o pendente aparece como "previsto"
+  // compras no crédito não saem do saldo no dia: entram quando a fatura é paga
+  let ent = 0, sai = 0, pEnt = 0, pSai = 0, cred = 0;
+  items.forEach(r => {
+    const v = +r.valor, inn = r.tipo === 'recebimento';
+    if (isCredito(r)) cred += v;
+    else if (isPend(r)) inn ? pEnt += v : pSai += v;
+    else inn ? ent += v : sai += v;
+  });
+  return { ent, sai, pEnt, pSai, cred, saldo: ent - sai, n: items.length };
+}
+const brl0 = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 });
+const byMonth = (all, key) => all.filter(r => (r.data || '').slice(0, 7) === key);
+const addMonths = (key, n) => { const [y, m] = key.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; };
+const shortMonth = key => { const [y, m] = key.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month:'short' }).replace('.', ''); };
 
+// resumo de um mês (o mesmo dos cards de hoje)
+function summaryHtml(st){
+  const prev = [st.pSai ? `a pagar ${brl.format(st.pSai)}` : '', st.pEnt ? `a receber ${brl.format(st.pEnt)}` : ''].filter(Boolean).join(' · ');
+  return `<div class="mh-sub"><span>${st.n} ${st.n === 1 ? 'registro' : 'registros'}</span><span class="mh-split num"><span class="i">+${brl.format(st.ent)}</span> · <span class="o">−${brl.format(st.sai)}</span></span></div>
+    ${prev ? `<div class="mh-prev num">Previsto: ${prev}</div>` : ''}${st.cred ? `<div class="mh-prev num">No cartão de crédito: ${brl.format(st.cred)} (entra nas faturas)</div>` : ''}`;
+}
+
+// ---- grupos recolhíveis (estado lembrado no aparelho)
+const grpState = store.get('contas.grupos', {});
+const grpOpen = (key, def) => grpState[key] === undefined ? def : grpState[key];
+function dueBox(pend, today, scope, title){
+  if (!pend.length) return '';
+  const defs = scope === 'home'
+    ? [['vencidas', 'Vencidas', n => n < 0, true], ['hoje', 'Hoje e amanhã', n => n <= 1, true], ['semana', 'Esta semana', n => n <= 7, false], ['depois', 'Mais tarde', () => true, false]]
+    : [['vencidas', 'Vencidas', n => n < 0, true], ['hoje', 'Hoje e amanhã', n => n <= 1, true], ['depois', 'Mais tarde no mês', () => true, false]];
+  const buckets = defs.map(() => []);
+  pend.forEach(r => { const n = daysBetween(today, r.data); buckets[defs.findIndex(d => d[2](n))].push(r); });
+  const aPagar = pend.filter(r => r.tipo === 'pagamento').reduce((t, r) => t + +r.valor, 0);
+  const groups = defs.map(([id, nome, , def], i) => {
+    const items = buckets[i]; if (!items.length) return '';
+    const key = scope + '-' + id, open = grpOpen(key, def);
+    const tot = items.reduce((t, r) => t + (r.tipo === 'recebimento' ? 0 : +r.valor), 0);
+    const cls = id === 'vencidas' ? 'neg' : id === 'hoje' ? 'warn' : '';
+    return `<button type="button" class="gh" data-grp="${key}" aria-expanded="${open}"><span><span class="arr">▸</span>${nome} (${items.length})</span><span class="tot num ${cls}">${tot ? brl.format(tot) : ''}</span></button>
+      <ul class="rows"${open ? '' : ' hidden'}>${items.map(r => rowHtml(r, { due:true, today })).join('')}</ul>`;
+  }).join('');
+  return `<section class="due" aria-label="${title}">
+    <div class="due-head"><h2>${title}</h2><span class="num">${aPagar ? 'a pagar ' + brl.format(aPagar) : ''}</span></div>${groups}</section>`;
+}
+
+// ---- gráfico dos últimos 6 meses (entradas x saídas, só o que já aconteceu)
+function chartHtml(all, today){
+  const cur = today.slice(0, 7);
+  const keys = [5, 4, 3, 2, 1, 0].map(i => addMonths(cur, -i));
+  const stats = keys.map(k => monthStats(byMonth(all, k)));
+  const max = Math.max(1, ...stats.map(s => Math.max(s.ent, s.sai)));
+  const h = v => Math.round(v / max * 92);
+  return `<section class="chart-box" aria-label="Últimos 6 meses"><h2>Últimos 6 meses <small><i class="e" style="background:var(--in)"></i>entradas<i style="background:var(--out)"></i>saídas</small></h2>
+    <div class="chart">${keys.map((k, i) => `<button type="button" class="b${k === cur ? ' now' : ''}" data-month="${k}" title="${monthLabel(k)}: +${brl.format(stats[i].ent)} / −${brl.format(stats[i].sai)}">
+      <span class="bs"><i class="e" style="height:${h(stats[i].ent)}px"></i><i class="s" style="height:${h(stats[i].sai)}px"></i></span>${shortMonth(k)}</button>`).join('')}</div></section>`;
+}
+
+function emptyHtml(){
+  return cfg.url
+    ? `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/></svg><div>Nenhum registro ainda.<br>Toque em <b>+</b> para adicionar o primeiro.</div></div>`
+    : `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><div>Conecte sua planilha do Google para começar.</div><button class="btn primary small" id="go-config">Configurar URL</button></div>`;
+}
+
+function render(){
+  renderHome();
+  if (location.hash.startsWith('#/mes/')) renderMonth(location.hash.slice(6));
+  if (location.hash === '#/parcelas') renderParcelas();
+  if (!rendering) Native.scheduleSoon();
+}
+
+function renderHome(){
+  const list = $('#list');
+  const todos = allRecords(), all = visibleRecords(todos);
   if (!all.length) {
-    list.innerHTML = cfg.url
-      ? `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/></svg><div>Nenhum registro ainda.<br>Toque em <b>+</b> para adicionar o primeiro.</div></div>`
-      : `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><div>Conecte sua planilha do Google para começar.</div><button class="btn primary small" id="go-config">Configurar URL</button></div>`;
+    list.innerHTML = emptyHtml();
     const g = $('#go-config'); if (g) g.onclick = () => go('#/config');
-    Native.scheduleSoon();
     return;
   }
+  const today = todayISO(), cur = today.slice(0, 7);
+  const st = monthStats(byMonth(all, cur));
+  const prevParts = [st.pSai ? `a pagar <b class="num" style="color:var(--warn)">${brl.format(st.pSai)}</b>` : '', st.pEnt ? `a receber <b class="num">${brl.format(st.pEnt)}</b>` : ''].filter(Boolean).join(' · ');
+  const prev = [prevParts ? 'Previsto: ' + prevParts : '', st.cred ? `No cartão: <b class="num">${brl.format(st.cred)}</b>` : ''].filter(Boolean).join(' · ');
+  let html = `<button type="button" class="cur" data-month="${cur}" aria-label="Abrir ${monthLabel(cur)}">
+    <div class="cur-head"><h2>${monthLabel(cur)}</h2><span>abrir ›</span></div>
+    <div class="kpi"><div><b class="pos num">+${brl0.format(st.ent)}</b><span>recebido</span></div><div><b class="neg num">−${brl0.format(st.sai)}</b><span>pago</span></div><div><b class="num ${st.saldo >= 0 ? '' : 'neg'}">${brl0.format(st.saldo)}</b><span>saldo</span></div></div>
+    ${prev ? `<div class="cur-prev">${prev}</div>` : ''}</button>`;
+  html += dueBox(all.filter(isPend).sort((a, b) => a.data.localeCompare(b.data)), today, 'home', 'A vencer');
+  html += cardsHtml(todos, today);
+  html += chartHtml(all, today);
 
-  const today = todayISO();
-  const pend = all.filter(isPend).sort((a, b) => a.data.localeCompare(b.data));
-  let html = cardsHtml(all, today);
-  if (pend.length) {
-    const aPagar = pend.filter(r => r.tipo === 'pagamento').reduce((t, r) => t + +r.valor, 0);
-    html += `<section class="due" aria-label="A vencer">
-      <div class="due-head"><h2>A vencer</h2><span class="num">${aPagar ? 'a pagar ' + brl.format(aPagar) : ''}</span></div>
-      <ul class="rows">${pend.map(r => rowHtml(r, { due:true, today })).join('')}</ul>
-    </section>`;
-  }
-
-  const groups = new Map();
-  all.forEach(r => {
-    const key = (r.data || '').slice(0, 7);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(r);
-  });
-  const keys = [...groups.keys()].sort().reverse();
-  if (firstRender) { openMonths.add(keys.includes(today.slice(0, 7)) ? today.slice(0, 7) : keys[0]); firstRender = false; }
-
-  html += keys.map(key => {
-    const items = groups.get(key).sort((a, b) => b.data.localeCompare(a.data));
-    // saldo só com o que já foi pago/recebido; o pendente aparece como "previsto"
-    // compras no crédito não saem do saldo no dia: entram quando a fatura é paga
-    let ent = 0, sai = 0, pEnt = 0, pSai = 0, cred = 0;
-    items.forEach(r => {
-      const v = +r.valor, inn = r.tipo === 'recebimento';
-      if (isCredito(r)) cred += v;
-      else if (isPend(r)) inn ? pEnt += v : pSai += v;
-      else inn ? ent += v : sai += v;
-    });
-    const saldo = ent - sai;
-    const open = openMonths.has(key);
-    const prev = [pSai ? `a pagar ${brl.format(pSai)}` : '', pEnt ? `a receber ${brl.format(pEnt)}` : ''].filter(Boolean).join(' · ');
-    const credTxt = cred ? `<div class="mh-prev num">No cartão de crédito: ${brl.format(cred)} (entra nas faturas)</div>` : '';
-    return `<section class="month${open ? ' open' : ''}" data-key="${key}">
-      <button class="month-head" aria-expanded="${open}">
-        <div class="mh-top"><span class="mh-title">${monthLabel(key)}</span><span class="mh-total num ${saldo >= 0 ? 'pos' : 'neg'}">${brl.format(saldo)}</span>${IC_CHEV}</div>
-        <div class="mh-sub"><span>${items.length} ${items.length === 1 ? 'registro' : 'registros'}</span><span class="mh-split num"><span class="i">+${brl.format(ent)}</span> · <span class="o">−${brl.format(sai)}</span></span></div>
-        ${prev ? `<div class="mh-prev num">Previsto: ${prev}</div>` : ''}${credTxt}
-      </button>
-      <ul class="rows"${open ? '' : ' hidden'}>
-        ${items.map(r => rowHtml(r, { today })).join('')}
-      </ul>
-    </section>`;
+  const keys = [...new Set(all.map(r => (r.data || '').slice(0, 7)))].filter(k => k && k !== cur).sort().reverse();
+  if (keys.length) html += `<div class="list-title">Meses</div>` + keys.map(key => {
+    const s = monthStats(byMonth(all, key));
+    return `<button type="button" class="month mo month-head" data-month="${key}">
+      <div class="mh-top"><span class="mh-title">${monthLabel(key)}</span><span class="mh-total num ${s.saldo >= 0 ? 'pos' : 'neg'}">${brl.format(s.saldo)}</span>${IC_CHEV}</div>
+      ${summaryHtml(s)}</button>`;
   }).join('');
   list.innerHTML = html;
-  if (!rendering) Native.scheduleSoon();
+}
+
+/* ================= MÊS ================= */
+let monthTab = 'lanc';
+function renderMonth(key){
+  if (!/^\d{4}-\d{2}$/.test(key)) return;
+  const todos = allRecords(), all = visibleRecords(todos), today = todayISO();
+  const items = byMonth(all, key).sort((a, b) => b.data.localeCompare(a.data));
+  const st = monthStats(items);
+  let html = `<section class="month msum"><div class="mh-top"><span class="mh-title">Saldo</span><span class="mh-total num ${st.saldo >= 0 ? 'pos' : 'neg'}">${brl.format(st.saldo)}</span></div>${summaryHtml(st).replace('padding-right:30px', '')}</section>
+    <div class="tabs" role="tablist">${[['lanc', 'Lançamentos'], ['cat', 'Por categoria'], ['cart', 'Cartões']].map(([id, nome]) =>
+      `<button type="button" role="tab" data-tab="${id}" aria-selected="${monthTab === id}">${nome}</button>`).join('')}</div>`;
+
+  if (monthTab === 'lanc') {
+    const pend = items.filter(isPend).sort((a, b) => a.data.localeCompare(b.data));
+    const feitos = items.filter(r => !isPend(r));
+    html += dueBox(pend, today, 'mes', 'A vencer no mês');
+    html += feitos.length
+      ? `<section class="month"><ul class="rows" style="border-top:0;padding-top:4px">${feitos.map(r => rowHtml(r, { today })).join('')}</ul></section>`
+      : `<div class="empty" style="padding:28px 24px">Nenhum lançamento pago ou recebido neste mês ainda.</div>`;
+  } else if (monthTab === 'cat') {
+    html += catsHtml(items, byMonth(all, addMonths(key, -1)), key, today);
+  } else {
+    html += monthCardsHtml(todos, items, key, today);
+  }
+  $('#month-view').innerHTML = html;
+}
+
+// gastos por categoria: compras (inclusive no crédito) já feitas; pagamento de fatura fica de fora
+const isGasto = r => r.tipo === 'pagamento' && r.forma !== 'fatura' && !isPend(r);
+const isReceita = r => r.tipo === 'recebimento' && !isPend(r);
+function catsHtml(items, prevItems, key, today){
+  const bloco = (titulo, filtro, sinal, id) => {
+    const soma = list => { const m = new Map(); list.filter(filtro).forEach(r => { const c = (r.categoria || '').trim() || 'Sem categoria'; m.set(c, (m.get(c) || 0) + +r.valor); }); return m; };
+    const atual = soma(items), ant = soma(prevItems);
+    if (!atual.size) return '';
+    const total = [...atual.values()].reduce((a, b) => a + b, 0);
+    const max = Math.max(...atual.values());
+    const rows = [...atual.entries()].sort((a, b) => b[1] - a[1]).map(([cat, v]) => {
+      const a = ant.get(cat) || 0, d = v - a, gk = `cat-${id}-${key}-${cat}`, open = grpOpen(gk, false);
+      const cmp = !a ? `novo · ${Math.round(v / total * 100)}% do total` :
+        `${Math.round(v / total * 100)}% do total · ` + (Math.abs(d) < 0.01 ? `igual a ${shortMonth(addMonths(key, -1))}` :
+          `<span class="${(d > 0) === (sinal < 0) ? 'up' : 'down'}">${d > 0 ? '▲' : '▼'} ${brl.format(Math.abs(d))}</span> vs ${shortMonth(addMonths(key, -1))}`);
+      const lista = items.filter(r => filtro(r) && (((r.categoria || '').trim() || 'Sem categoria') === cat));
+      return `<button type="button" class="cat-row" data-grp="${esc(gk)}" aria-expanded="${open}"><span class="n">${esc(cat)}</span><span class="v num">${brl.format(v)}</span>
+        <span class="bar"><i style="width:${Math.max(2, Math.round(v / max * 100))}%;${sinal > 0 ? 'background:var(--in)' : ''}"></i></span><span class="cmp">${cmp}</span></button>
+        <ul class="rows"${open ? '' : ' hidden'}>${lista.map(r => rowHtml(r, { today })).join('')}</ul>`;
+    }).join('');
+    return `<section class="cats"><h3><span>${titulo}</span><span class="num">${brl.format(total)}</span></h3>${rows}</section>`;
+  };
+  const html = bloco('Gastos', isGasto, -1, 'g') + bloco('Recebimentos', isReceita, 1, 'r');
+  return html ? html + `<p class="hint">Gastos incluem as compras no crédito pela data da compra. Pagamentos de fatura não entram, para não contar duas vezes.</p>`
+    : `<div class="empty" style="padding:28px 24px">Nada pago ou recebido neste mês ainda.</div>`;
+}
+
+// cartões no mês: compras feitas no mês e faturas que vencem no mês
+function monthCardsHtml(all, items, key, today){
+  const nomes = [...new Set([...cartoes.map(c => c.nome), ...items.filter(isCredito).map(r => r.cartao || 'Crédito')])];
+  const blocks = nomes.map(nome => {
+    const c = cardByName(nome);
+    const compras = items.filter(r => isCredito(r) && norm(r.cartao || 'Crédito') === norm(nome));
+    let fat = '';
+    if (c) {
+      const daFatura = all.filter(r => isCredito(r) && norm(r.cartao) === norm(nome) && faturaDe(c, r.data).vence.slice(0, 7) === key);
+      if (daFatura.length) {
+        const total = daFatura.reduce((t, r) => t + +r.valor, 0), f = faturaDe(c, daFatura[0].data);
+        const pg = pagamentoDaFatura(all, nome, f.vence);
+        const stt = pg ? (isPend(pg) ? '<span class="cc-ok" style="color:var(--warn)">a pagar</span>' : '<span class="cc-ok">paga ✓</span>')
+          : f.fecha <= today ? `<button type="button" class="pay" data-fatura="${esc(c.id)}|${f.vence}|${total}">Lançar pagamento</button>` : '<span class="lbl2">aberta</span>';
+        fat = `<div class="cc-line"><span class="lbl2">Fatura que vence ${fmtDM(f.vence)}</span><span class="act">${stt}<span class="v num">${brl.format(total)}</span></span></div>`;
+      }
+    }
+    if (!compras.length && !fat) return '';
+    const gk = `mcard-${key}-${nome}`, open = grpOpen(gk, false);
+    const tot = compras.reduce((t, r) => t + +r.valor, 0);
+    return `<div class="cc"><div class="cc-name">💳 ${esc(nome)}</div>${fat}
+      ${compras.length ? `<button type="button" class="gh" data-grp="${esc(gk)}" aria-expanded="${open}" style="padding:8px 0;border-top:0"><span><span class="arr">▸</span>Compras no mês (${compras.length})</span><span class="tot num">${brl.format(tot)}</span></button>
+      <ul class="rows" style="padding:0"${open ? '' : ' hidden'}>${compras.map(r => rowHtml(r, { today })).join('')}</ul>` : ''}</div>`;
+  }).join('');
+  return blocks ? `<section class="cards-box">${blocks}</section>`
+    : `<div class="empty" style="padding:28px 24px">${cartoes.length ? 'Nenhuma compra no crédito nem fatura neste mês.' : 'Cadastre seus cartões em Ajustes → Cartões de crédito.'}</div>`;
 }
 
 function isPend(r){ return r.situacao === 'pendente'; }
@@ -858,7 +1081,67 @@ function cardsHtml(all, today){
       });
     return html + '</div>';
   }).join('');
-  return `<section class="cards-box" aria-label="Cartões"><h2>Cartões</h2>${blocks}</section>`;
+  const pr = parcelasResumo(all, today);
+  const link = pr.restante > 0 ? `<button type="button" class="cc-link" data-goto="#/parcelas"><span>📅 <b>Parcelas</b> <span class="lbl2">· ${brl.format(pr.proximo)} em ${shortMonth(pr.primeiroMes)} · até ${shortMonth(pr.ultimoMes)}/${pr.ultimoMes.slice(2, 4)}</span></span><span style="color:var(--accent);font-weight:700">›</span></button>` : '';
+  return `<section class="cards-box" aria-label="Cartões"><h2>Cartões</h2>${blocks}${link}</section>`;
+}
+
+/* ================= PARCELAS ================= */
+// mês da fatura em que cada parcela é cobrada
+const mesCobranca = r => (vencimentoFatura(r) || r.data).slice(0, 7);
+function gruposParcelas(all){
+  const g = new Map();
+  all.filter(r => r.grupo).forEach(r => { if (!g.has(r.grupo)) g.set(r.grupo, []); g.get(r.grupo).push(r); });
+  return [...g.values()].map(list => {
+    list.sort((a, b) => a.data.localeCompare(b.data));
+    const total = +(list[0].parcela || '1/1').split('/')[1] || list.length;
+    return { list, total, desc: list[0].descricao, cartao: list[0].cartao, valor: list[list.length - 1].valor };
+  });
+}
+// parcela "em aberto" = a fatura dela ainda não venceu
+function parcelasResumo(all, today){
+  const cur = today.slice(0, 7);
+  const abertas = all.filter(r => r.grupo && isCredito(r) && (vencimentoFatura(r) || r.data) >= today);
+  const porMes = new Map();
+  abertas.forEach(r => { const k = mesCobranca(r); porMes.set(k, (porMes.get(k) || 0) + +r.valor); });
+  const meses = [...porMes.keys()].sort();
+  return { porMes, restante: abertas.reduce((t, r) => t + +r.valor, 0), primeiroMes: meses[0] || cur, ultimoMes: meses[meses.length - 1] || cur,
+    proximo: meses.length ? porMes.get(meses[0]) : 0 };
+}
+function renderParcelas(){
+  const all = allRecords(), today = todayISO();
+  const pr = parcelasResumo(all, today);
+  let html = '';
+  if (pr.restante > 0) {
+    const meses = []; for (let k = pr.primeiroMes; k <= pr.ultimoMes && meses.length < 18; k = addMonths(k, 1)) meses.push(k);
+    meses.push(addMonths(pr.ultimoMes, 1));
+    const max = Math.max(...meses.map(k => pr.porMes.get(k) || 0), 1);
+    html += `<section class="chart-box"><h2>Comprometido por mês</h2>
+      <div class="pc-chart">${meses.map(k => { const v = pr.porMes.get(k) || 0;
+        return `<div class="b"><em>${v ? brl0.format(v).replace('R$ ', '') : '0'}</em><i style="height:${Math.round(v / max * 84)}px"></i>${shortMonth(k)}</div>`; }).join('')}</div>
+      <p class="hint" style="margin-top:8px">Livre a partir de <b>${monthLabel(addMonths(pr.ultimoMes, 1)).toLowerCase()}</b> · total restante <b class="num">${brl.format(pr.restante)}</b></p></section>`;
+  }
+  const grupos = gruposParcelas(all).map(g => {
+    const abertas = g.list.filter(r => (vencimentoFatura(r) || r.data) >= today);
+    const pagas = g.total - abertas.length;
+    const ultima = g.list[g.list.length - 1];
+    return { ...g, abertas, pagas, ultimaMes: mesCobranca(ultima), restam: abertas.reduce((t, r) => t + +r.valor, 0) };
+  }).sort((a, b) => a.ultimaMes.localeCompare(b.ultimaMes));
+  const linha = g => `<button type="button" class="pc row" data-id="${esc(g.list.find(r => !isFutureParcel(r))?.id || g.list[0].id)}" style="width:100%;text-align:left;background:transparent;border-left:0;border-right:0;border-bottom:0">
+      <span class="badge" style="background:#e8e4fb;color:#4c3a9e">💳</span>
+      <span class="t"><b>${esc(String(g.desc).replace(/[*_]/g, ''))}</b><span>${esc(g.cartao || 'Crédito')} · ${g.total}× ${brl.format(g.valor)} · última em ${shortMonth(g.ultimaMes)}/${g.ultimaMes.slice(2, 4)}</span>
+        <span class="prog"><i style="width:${Math.round(g.pagas / g.total * 100)}%"></i></span></span>
+      <span class="r2"><b>${g.pagas}/${g.total} <small style="font-weight:500;color:var(--muted)">pagas</small></b><span>${g.restam ? brl.format(g.restam) + (g.abertas.length === 1 ? ' resta' : ' restam') : 'concluída'}</span></span></button>`;
+  const ativos = grupos.filter(g => g.abertas.length), feitos = grupos.filter(g => !g.abertas.length);
+  html += ativos.length ? `<section class="cards-box">${ativos.map(linha).join('')}</section>`
+    : `<div class="empty" style="padding:28px 24px">Nenhuma compra parcelada em aberto.<br>Ao cadastrar uma compra no crédito, marque <b>Parcelado no cartão</b>.</div>`;
+  if (feitos.length) {
+    const open = grpOpen('parc-concluidas', false);
+    html += `<section class="cards-box"><button type="button" class="gh" data-grp="parc-concluidas" aria-expanded="${open}" style="border-top:0"><span><span class="arr">▸</span>Concluídas (${feitos.length})</span><span></span></button>
+      <div class="rows"${open ? '' : ' hidden'}>${feitos.map(linha).join('')}</div></section>`;
+  }
+  html += `<p class="hint">"Pagas" são as parcelas de faturas que já venceram. Parcelas de meses que ainda não chegaram não aparecem nas listas, só aqui e nas faturas.</p>`;
+  $('#parc-view').innerHTML = html;
 }
 function daysBetween(a, b){
   const [y1, m1, d1] = a.split('-').map(Number), [y2, m2, d2] = b.split('-').map(Number);
@@ -874,7 +1157,7 @@ function dueChip(r, today){
 }
 const FORMA_NOME = { pix:'Pix', credito:'Crédito', debito:'Débito', boleto:'Boleto', dinheiro:'Dinheiro', fatura:'Fatura' };
 function formaChip(r){
-  if (isCredito(r)) { const v = vencimentoFatura(r); return `<span class="chip ccard" title="${v ? 'Fatura que vence em ' + fmtDM(v) : ''}">💳 ${esc(r.cartao || 'Crédito')}</span>`; }
+  if (isCredito(r)) { const v = vencimentoFatura(r); return `<span class="chip ccard" title="${v ? 'Fatura que vence em ' + fmtDM(v) : ''}">💳 ${esc(r.cartao || 'Crédito')}${r.parcela ? ' · ' + esc(r.parcela) : ''}</span>`; }
   if (r.forma === 'fatura') return `<span class="chip ccard">Fatura ${esc(r.cartao || '')}</span>`;
   return r.forma && FORMA_NOME[r.forma] ? `<span class="chip forma">${FORMA_NOME[r.forma]}</span>` : '';
 }
@@ -899,7 +1182,17 @@ function rowHtml(r, { due, today }){
 }
 
 let prefill = null; // dados para abrir o formulário já preenchido
-$('#list').addEventListener('click', e => {
+function onListClick(e){
+  const grp = e.target.closest('[data-grp]');
+  if (grp) {
+    const key = grp.dataset.grp, open = grp.getAttribute('aria-expanded') !== 'true';
+    grpState[key] = open; store.set('contas.grupos', grpState);
+    grp.setAttribute('aria-expanded', open);
+    const ul = grp.nextElementSibling; if (ul && ul.classList.contains('rows')) ul.hidden = !open;
+    return;
+  }
+  const tab = e.target.closest('[data-tab]');
+  if (tab) { monthTab = tab.dataset.tab; renderMonth(location.hash.slice(6)); return; }
   const fat = e.target.closest('[data-fatura]');
   if (fat) {
     const [id, vence, total] = fat.dataset.fatura.split('|');
@@ -921,23 +1214,21 @@ $('#list').addEventListener('click', e => {
   }
   const row = e.target.closest('.row');
   if (row) return go('#/editar/' + encodeURIComponent(row.dataset.id));
-  const head = e.target.closest('.month-head'); if (!head) return;
-  const sec = head.parentElement, key = sec.dataset.key;
-  const open = !sec.classList.contains('open');
-  sec.classList.toggle('open', open);
-  head.setAttribute('aria-expanded', open);
-  sec.querySelector('.rows').hidden = !open;
-  open ? openMonths.add(key) : openMonths.delete(key);
-});
-
-$('#list').addEventListener('keydown', e => {
+  const gt = e.target.closest('[data-goto]');
+  if (gt) return go(gt.dataset.goto);
+  const mo = e.target.closest('[data-month]');
+  if (mo) { monthTab = 'lanc'; return go('#/mes/' + mo.dataset.month); }
+}
+function onListKey(e){
   const row = e.target.closest('.row');
   if (row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); row.click(); }
-});
+}
+['#list', '#month-view', '#parc-view'].forEach(sel => { $(sel).addEventListener('click', onListClick); $(sel).addEventListener('keydown', onListKey); });
 
 /* ================= FORM ================= */
 const fData = $('#f-data'), fValor = $('#f-valor'), fDesc = $('#f-desc'), fCat = $('#f-cat'), catList = $('#cat-list');
 let cents = 0, editingId = null, sitTouched = false, formAvisos = [], origAvisos, formForma = '', formCartao = '';
+let parc = { on:false, n:2, ini:1, vals:[], showAll:false }, origRec = null; // parcelamento do formulário
 
 function resetForm(){
   fData.value = todayISO();
@@ -957,6 +1248,9 @@ function resetForm(){
   updateAvisoField();
   $('#btn-delete').classList.add('hidden');
   disarmDelete();
+  parc = { on:false, n:2, ini:1, vals:[], showAll:false }; origRec = null;
+  $('#f-parc-n').value = 2; $('#f-parc-ini').value = 1;
+  updateParcField();
 }
 function fillForm(r){
   editingId = r.id;
@@ -975,6 +1269,8 @@ function fillForm(r){
   updateFormaField();
   updateAvisoField();
   $('#btn-delete').classList.remove('hidden');
+  origRec = r;
+  updateParcField();
 }
 
 // calendário ao tocar na data
@@ -993,7 +1289,7 @@ fData.addEventListener('change', () => {
   updateAvisoField();
 });
 document.querySelectorAll('input[name=situacao]').forEach(i => i.addEventListener('change', () => { sitTouched = true; updateAvisoField(); }));
-document.querySelectorAll('input[name=tipo]').forEach(i => i.addEventListener('change', () => { updateSitLabels(); updateFormaField(); updateAvisoField(); }));
+document.querySelectorAll('input[name=tipo]').forEach(i => i.addEventListener('change', () => { updateSitLabels(); updateFormaField(); updateAvisoField(); updateParcField(); }));
 
 // ---- forma de pagamento e cartão
 function updateFormaField(){
@@ -1023,13 +1319,13 @@ function updateFormaField(){
 $('#f-forma').addEventListener('click', e => {
   const b = e.target.closest('button[data-forma]'); if (!b) return;
   formForma = formForma === b.dataset.forma ? '' : b.dataset.forma;  // tocar de novo desmarca
-  updateFormaField(); updateAvisoField();
+  updateFormaField(); updateAvisoField(); updateParcField();
 });
 $('#f-cartao').addEventListener('click', e => {
   const b = e.target.closest('button[data-cartao]'); if (!b) return;
-  formCartao = b.dataset.cartao; updateFormaField();
+  formCartao = b.dataset.cartao; updateFormaField(); updateParcField();
 });
-fData.addEventListener('change', updateFormaField);
+fData.addEventListener('change', () => { updateFormaField(); updateParcField(); });
 
 // ---- aviso opcional (só no app Android, pagamento "A pagar")
 const avisoVisivel = () => Native.on && $('#t-out').checked && $('#s-pend').checked && formForma !== 'credito';
@@ -1074,7 +1370,79 @@ fValor.addEventListener('input', () => {
   const digits = fValor.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 12);
   cents = digits ? parseInt(digits, 10) : 0;
   fValor.value = cents ? brl.format(cents / 100) : '';
+  if (parc.on) { splitParcelas(); renderParcList(); }
 });
+
+// ---- parcelamento (compra no crédito, só no cadastro)
+const parcVisivel = () => formForma === 'credito' && !editingId && $('#t-out').checked;
+function splitParcelas(){
+  const n = parc.n, base = Math.floor(cents / n), resto = cents - base * n;
+  parc.vals = [];
+  for (let k = parc.ini; k <= n; k++) parc.vals.push(base + (k === 1 ? resto : 0)); // centavos que sobram vão na 1ª
+}
+function parcDatas(){ return parc.vals.map((_, i) => addMonthsISO(fData.value || todayISO(), i)); }
+function renderParcList(){
+  const c = cardByName(formCartao), datas = parcDatas();
+  const venc = d => c ? faturaDe(c, d).vence : d;
+  const lim = parc.showAll ? parc.vals.length : Math.min(parc.vals.length, 4);
+  let html = parc.vals.slice(0, lim).map((v, i) => `<li><span>${parc.ini + i}/${parc.n} · fatura ${fmtDM(venc(datas[i]))}</span>
+    <input class="num" inputmode="numeric" data-pi="${i}" value="${brl.format(v / 100)}" aria-label="Valor da parcela ${parc.ini + i}"></li>`).join('');
+  if (parc.vals.length > lim) html += `<li><button type="button" class="more" id="parc-more">ver todas (+${parc.vals.length - lim})</button><span></span></li>`;
+  $('#f-parc-list').innerHTML = html;
+  updateParcHint();
+}
+function updateParcHint(){
+  const c = cardByName(formCartao), datas = parcDatas();
+  const venc = d => c ? faturaDe(c, d).vence : d;
+  const soma = parc.vals.reduce((a, b) => a + b, 0);
+  const ult = datas.length ? venc(datas[datas.length - 1]).slice(0, 7) : '';
+  const esperado = parc.ini === 1 ? cents : null;
+  $('#f-parc-hint').innerHTML = !cents ? 'Informe o valor total da compra acima.' :
+    `Serão criadas <b>${parc.vals.length}</b> parcelas · última na fatura de <b>${ult ? shortMonth(ult) + '/' + ult.slice(2, 4) : ''}</b>` +
+    (parc.ini > 1 ? ` · as parcelas 1 a ${parc.ini - 1} já foram pagas e não entram` : '') +
+    (esperado !== null && soma !== esperado ? `<br><b style="color:var(--warn)">Soma das parcelas: ${brl.format(soma / 100)}</b> (o total é ${brl.format(cents / 100)})` : '');
+  const resumoN = parc.vals.length && parc.vals.every(v => v === parc.vals[0]) ? `${parc.n}× de ${brl.format(parc.vals[0] / 100)}` : `${parc.n} parcelas`;
+  $('#f-parc-resumo').textContent = parc.ini > 1 ? `${resumoN} · começando na ${parc.ini}ª` : resumoN;
+}
+function updateParcField(){
+  const vis = parcVisivel();
+  $('#f-parc-wrap').classList.toggle('hidden', !vis);
+  if (!vis) parc.on = false;
+  $('#f-parc').checked = parc.on;
+  $('#f-parc-body').classList.toggle('hidden', !parc.on);
+  if (!parc.on) $('#f-parc-resumo').textContent = 'À vista';
+  else renderParcList();
+  // editando uma parcela: mostra de qual compra ela é
+  const r = editingId && origRec && origRec.grupo ? origRec : null;
+  $('#f-parc-info').classList.toggle('hidden', !r);
+  $('#btn-delete-all').classList.toggle('hidden', !r);
+  if (r) $('#f-parc-info-txt').innerHTML = `Parcela <b>${esc(r.parcela)}</b> de uma compra parcelada. Descrição, categoria e cartão mudam em todas as parcelas; data e valor, só nesta.`;
+  $('#lbl-valor').textContent = parc.on ? 'Valor total da compra' : r ? 'Valor desta parcela' : 'Valor';
+  $('#btn-delete').textContent = r ? 'Excluir só esta parcela' : 'Excluir registro';
+}
+$('#f-parc').addEventListener('change', e => {
+  parc.on = e.target.checked;
+  if (parc.on) { parc.n = Math.max(2, +$('#f-parc-n').value || 2); parc.ini = 1; $('#f-parc-ini').value = 1; splitParcelas(); }
+  updateParcField();
+});
+['#f-parc-n', '#f-parc-ini'].forEach(sel => $(sel).addEventListener('input', () => {
+  const n = Math.min(48, Math.max(2, Math.round(+$('#f-parc-n').value) || 2));
+  const ini = Math.min(n, Math.max(1, Math.round(+$('#f-parc-ini').value) || 1));
+  if (n === parc.n && ini === parc.ini) return;
+  parc.n = n; parc.ini = ini; splitParcelas(); renderParcList();
+}));
+$('#f-parc-list').addEventListener('input', e => {
+  const inp = e.target.closest('input[data-pi]'); if (!inp) return;
+  const digits = inp.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 12);
+  parc.vals[+inp.dataset.pi] = digits ? parseInt(digits, 10) : 0;
+  inp.value = brl.format(parc.vals[+inp.dataset.pi] / 100);
+  const pos = inp.value.length; try { inp.setSelectionRange(pos, pos); } catch {}
+  updateParcHint(); // só o texto: recriar a lista tiraria o foco do campo
+});
+$('#f-parc-list').addEventListener('change', e => { if (e.target.closest('input[data-pi]')) renderParcList(); });
+// tocar numa parcela seleciona o valor: o que for digitado substitui
+$('#f-parc-list').addEventListener('focusin', e => { const i = e.target.closest('input[data-pi]'); if (i) setTimeout(() => i.select(), 0); });
+$('#f-parc-list').addEventListener('click', e => { if (e.target.id === 'parc-more') { parc.showAll = true; renderParcList(); } });
 
 // editor rico
 let savedRange = null;
@@ -1186,9 +1554,34 @@ $('#form').addEventListener('submit', async e => {
     categoria, valor: cents / 100
   };
   rec.fatura = credito ? vencimentoFatura(rec) : '';
+  rec.parcela = isEdit && origRec ? (origRec.parcela || '') : '';
+  rec.grupo = isEdit && origRec ? (origRec.grupo || '') : '';
   if (!isEdit) { store.set('contas.ultimaForma', formForma); if (usaCartao) store.set('contas.ultimoCartao', formCartao); }
+
+  if (!isEdit && parc.on && credito) {
+    // uma linha por parcela na planilha, ligadas pelo mesmo grupo
+    if (parc.vals.some(v => v <= 0)) return toast('Todas as parcelas precisam de valor');
+    const grupo = uid(), datas = parcDatas();
+    parc.vals.forEach((v, i) => {
+      const p = { ...rec, id: uid(), data: datas[i], valor: v / 100, parcela: `${parc.ini + i}/${parc.n}`, grupo };
+      p.fatura = vencimentoFatura(p);
+      enqueue('add', p);
+    });
+    render(); back();
+    return sendNow(`Compra parcelada salva (${parc.vals.length} parcelas) ✓`);
+  }
+
   enqueue(isEdit ? 'update' : 'add', rec);
-  openMonths.add(rec.data.slice(0, 7));
+  // parcela editada: descrição, categoria e cartão valem para todas as parcelas da compra
+  if (isEdit && rec.grupo) {
+    allRecords().filter(r => r.grupo === rec.grupo && r.id !== rec.id).forEach(r => {
+      if (r.descricao === rec.descricao && r.categoria === rec.categoria && r.cartao === rec.cartao) return;
+      const { _pending, ...o } = r;
+      const up = { ...o, descricao: rec.descricao, categoria: rec.categoria, cartao: rec.cartao };
+      up.fatura = isCredito(up) ? vencimentoFatura(up) : '';
+      enqueue('update', up);
+    });
+  }
   render();
   back();
   sendNow(isEdit ? 'Alteração salva na planilha ✓' : 'Salvo na planilha ✓');
@@ -1209,7 +1602,7 @@ async function sendNow(okMsg){
 let delTimer;
 function disarmDelete(){
   clearTimeout(delTimer);
-  const b = $('#btn-delete'); b.classList.remove('armed'); b.textContent = 'Excluir registro';
+  const b = $('#btn-delete'); b.classList.remove('armed'); b.textContent = origRec && origRec.grupo ? 'Excluir só esta parcela' : 'Excluir registro';
 }
 $('#btn-delete').addEventListener('click', () => {
   const b = $('#btn-delete');
@@ -1224,6 +1617,22 @@ $('#btn-delete').addEventListener('click', () => {
   render();
   back();
   sendNow('Registro excluído ✓');
+});
+
+let delAllTimer;
+$('#btn-delete-all').addEventListener('click', () => {
+  const b = $('#btn-delete-all');
+  if (!b.classList.contains('armed')) {
+    b.classList.add('armed'); b.textContent = 'Toque de novo para excluir todas';
+    delAllTimer = setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Excluir a compra inteira (todas as parcelas)'; }, 3500);
+    return;
+  }
+  clearTimeout(delAllTimer); b.classList.remove('armed'); b.textContent = 'Excluir a compra inteira (todas as parcelas)';
+  const grupo = origRec && origRec.grupo; if (!grupo) return;
+  const ids = allRecords().filter(r => r.grupo === grupo).map(r => r.id);
+  ids.forEach(id => enqueue('delete', { id }));
+  render(); back();
+  sendNow(`Compra excluída (${ids.length} parcelas) ✓`);
 });
 
 /* ================= CONFIG ================= */
@@ -1457,14 +1866,18 @@ function back(){ if (inAppNav && history.length > 1) { inAppNav = false; history
 function route(){
   const h = location.hash;
   const editId = h.startsWith('#/editar/') ? decodeURIComponent(h.slice(9)) : null;
-  let scr = (h === '#/novo' || editId) ? 'form' : h === '#/config' ? 'config' : 'home';
+  const monthKey = /^#\/mes\/\d{4}-\d{2}$/.test(h) ? h.slice(6) : null;
+  let scr = (h === '#/novo' || editId) ? 'form' : h === '#/config' ? 'config' : monthKey ? 'month' : h === '#/parcelas' ? 'parcelas' : 'home';
   if (scr !== 'config' && cfg.url && !session) scr = 'login';
   document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + scr));
   document.body.classList.toggle('form-mode', scr === 'form');
   document.body.classList.toggle('login-mode', scr === 'login');
   $('#nav-home').classList.toggle('active', scr === 'home');
   $('#nav-config').classList.toggle('active', scr === 'config');
-  $('#title').textContent = scr === 'form' ? (editId ? 'Editar conta' : 'Nova conta') : scr === 'config' ? 'Ajustes' : 'Minhas Contas';
+  $('#title').textContent = scr === 'form' ? (editId ? 'Editar conta' : 'Nova conta') : scr === 'config' ? 'Ajustes' : scr === 'month' ? monthLabel(monthKey) : scr === 'parcelas' ? 'Parcelas' : 'Minhas Contas';
+  $('#btn-back').classList.toggle('hidden', scr !== 'month' && scr !== 'parcelas');
+  if (scr === 'parcelas') renderParcelas();
+  if (scr === 'month') renderMonth(monthKey);
   if (scr === 'login') showLogin();
   $('#btn-sync').classList.toggle('hidden', scr !== 'home');
   if (scr === 'form') {
@@ -1481,9 +1894,10 @@ function route(){
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', route);
-$('#nav-home').onclick = () => location.hash === '#/config' ? (inAppNav ? back() : location.replace('#/')) : null;
+$('#nav-home').onclick = () => { if (location.hash && location.hash !== '#/') location.replace('#/'); };
 $('#nav-add').onclick = () => go('#/novo');
 $('#warn-home').onclick = () => go('#/config');
+$('#btn-back').onclick = () => back();
 $('#nav-config').onclick = () => location.hash !== '#/config' && go('#/config');
 $('#btn-sync').onclick = () => !cfg.url ? go('#/config') : session ? sync() : route();
 

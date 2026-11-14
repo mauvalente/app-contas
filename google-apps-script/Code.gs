@@ -36,10 +36,10 @@ const SESSAO_DIAS = 180;
 
 // Versão do script: o app avisa quando a publicada for mais antiga que a que ele espera.
 // Aumente junto com SCRIPT_MIN no index.html sempre que o script ganhar campos novos.
-const SCRIPT_VERSAO = 4;
+const SCRIPT_VERSAO = 5;
 
 const HEADERS = ['ID', 'Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Criado em', 'Situação', 'Avisos',
-                 'Forma', 'Cartão', 'Vencimento da fatura'];
+                 'Forma', 'Cartão', 'Vencimento da fatura', 'Parcela', 'Grupo da parcela'];
 const COL_SITUACAO = 8; // coluna H (H em diante: Situação, Avisos, Forma, Cartão, Vencimento da fatura)
 const AVISO_NOMES = { vespera: 'Dia anterior', dia: 'No dia' };
 const FORMAS = { pix: 'Pix', credito: 'Crédito', debito: 'Débito', boleto: 'Boleto', dinheiro: 'Dinheiro', fatura: 'Fatura do cartão' };
@@ -74,6 +74,16 @@ function doPost(e) {
       if (action === 'cartoes') return json_({ ok: true, cartoes: setCartoes_(user, body.cartoes) });
       if (action === 'add' || action === 'update') return json_(Object.assign({ ok: true }, upsert_(sh, body.record || {})));
       if (action === 'delete') return json_(Object.assign({ ok: true }, delete_(sh, body.record || {})));
+      // várias alterações numa chamada só (ex.: as parcelas de uma compra)
+      if (action === 'batch') {
+        const ops = Array.isArray(body.ops) ? body.ops.slice(0, 60) : [];
+        const results = ops.map(function (op) {
+          if (op.action === 'delete') return delete_(sh, op.record || {});
+          if (op.action === 'add' || op.action === 'update') return upsert_(sh, op.record || {});
+          throw new Error('Ação desconhecida no lote');
+        });
+        return json_({ ok: true, results: results });
+      }
     } finally {
       lock.releaseLock();
     }
@@ -211,6 +221,9 @@ function upsert_(sh, r) {
   const forma = FORMAS[String(r.forma || '')] || '';
   const cartao = String(r.cartao || '').trim().slice(0, 40);
   const fatura = /^\d{4}-\d{2}-\d{2}$/.test(String(r.fatura || '')) ? parseDate_(String(r.fatura)) : '';
+  // parcela "5/10" (texto, para a planilha não virar data) e o id que liga as parcelas da mesma compra
+  const parcela = /^\d{1,2}\/\d{1,2}$/.test(String(r.parcela || '')) ? "'" + r.parcela : '';
+  const grupo = String(r.grupo || '').slice(0, 40);
 
   if (!id) throw new Error('ID ausente');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) throw new Error('Data inválida');
@@ -231,10 +244,10 @@ function upsert_(sh, r) {
   const row = findRow_(sh, id);
   if (row > 0) {
     sh.getRange(row, 2, 1, values.length).setValues([values]);
-    sh.getRange(row, COL_SITUACAO, 1, 5).setValues([[situacao, avisos, forma, safe_(cartao), fatura]]);
+    sh.getRange(row, COL_SITUACAO, 1, 7).setValues([[situacao, avisos, forma, safe_(cartao), fatura, parcela, grupo]]);
     return { id: id, updated: true };
   }
-  sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([[id].concat(values, [new Date(), situacao, avisos, forma, safe_(cartao), fatura])]);
+  sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([[id].concat(values, [new Date(), situacao, avisos, forma, safe_(cartao), fatura, parcela, grupo])]);
   return { id: id, created: true };
 }
 
@@ -282,7 +295,9 @@ function list_(sh) {
       avisos: avisosLista_(row[8]),
       forma: formaChave_(row[9]),
       cartao: String(row[10] || ''),
-      fatura: row[11] instanceof Date ? Utilities.formatDate(row[11], tz, 'yyyy-MM-dd') : ''
+      fatura: row[11] instanceof Date ? Utilities.formatDate(row[11], tz, 'yyyy-MM-dd') : '',
+      parcela: String(row[12] || '').replace(/^'/, ''),
+      grupo: String(row[13] || '')
     });
   });
   return out;
