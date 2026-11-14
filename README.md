@@ -88,7 +88,7 @@ Anote o endereço, sem barra no final. Ele é usado no passo 2.
 - Na planilha, negrito fica como `*texto*` e itálico como `_texto_`.
 - Na planilha, a coluna **H (Situação)** mostra Pago, A pagar, Recebido ou A receber. Registros antigos sem situação contam como pagos.
 - Colunas **J (Forma)**, **K (Cartão)** e **L (Vencimento da fatura)**. Ao levar os dados para a planilha de gastos: some as categorias **sem** as linhas "Fatura do cartão", para não contar o mesmo gasto duas vezes. A coluna L diz em qual boleto cada compra no crédito será paga.
-- Ao atualizar os arquivos do app, aumente o número em `CACHE = 'contas-v9'` no `sw.js` para os celulares baixarem a versão nova.
+- Ao atualizar os arquivos do app, aumente o número em `CACHE = 'contas-v10'` no `sw.js` para os celulares baixarem a versão nova.
 
 ## Compras parceladas
 
@@ -98,6 +98,12 @@ Anote o endereço, sem barra no final. Ele é usado no passo 2.
 - No **app**, parcelas de meses que ainda não chegaram **não aparecem** nas listas nem nos totais do mês. Elas entram quando o mês chega, e já contam nas faturas de cada cartão.
 - **Parcelas** (atalho no fim do quadro Cartões): quanto está comprometido em cada mês, a partir de quando fica livre, e cada compra com o progresso ("4/10 pagas") e quanto falta.
 - Editar uma parcela: descrição, categoria e cartão mudam em **todas** as parcelas da compra; data e valor só naquela. Na edição dá para excluir só a parcela ou a compra inteira.
+
+## Contas que repetem, Recentes e fatura automática
+
+- **🔁 Repete todo mês** (no cadastro): quando a data da conta passa, o app cria a do mês seguinte, no mesmo dia, como **A pagar** (ou A receber), com o último valor e os mesmos avisos. Você edita o valor quando a conta chegar (luz, água…). No crédito (ex.: uma assinatura), o próximo é lançado no cartão e fica escondido até o dia chegar. Para parar, edite uma ocorrência e desmarque: as próximas criadas pelo app são apagadas. Na planilha, a coluna **O (Recorrente)** liga as ocorrências.
+- **Recentes** (topo do formulário): as últimas descrições usadas. Um toque preenche tipo, forma, cartão e categoria; só falta o valor.
+- **Fatura automática**: quando uma fatura **fecha** (e ainda não venceu), o app cria sozinho o "A pagar" dela, com o total das compras, na data do vencimento. Se você lançar uma compra atrasada naquela fatura, o valor acompanha enquanto ela não for paga. Faturas que já venceram continuam com o botão **Lançar pagamento**, porque provavelmente já foram pagas por fora.
 
 ## Testar no computador
 

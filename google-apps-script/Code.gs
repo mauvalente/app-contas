@@ -36,10 +36,10 @@ const SESSAO_DIAS = 180;
 
 // Versão do script: o app avisa quando a publicada for mais antiga que a que ele espera.
 // Aumente junto com SCRIPT_MIN no index.html sempre que o script ganhar campos novos.
-const SCRIPT_VERSAO = 5;
+const SCRIPT_VERSAO = 6;
 
 const HEADERS = ['ID', 'Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Criado em', 'Situação', 'Avisos',
-                 'Forma', 'Cartão', 'Vencimento da fatura', 'Parcela', 'Grupo da parcela'];
+                 'Forma', 'Cartão', 'Vencimento da fatura', 'Parcela', 'Grupo da parcela', 'Recorrente'];
 const COL_SITUACAO = 8; // coluna H (H em diante: Situação, Avisos, Forma, Cartão, Vencimento da fatura)
 const AVISO_NOMES = { vespera: 'Dia anterior', dia: 'No dia' };
 const FORMAS = { pix: 'Pix', credito: 'Crédito', debito: 'Débito', boleto: 'Boleto', dinheiro: 'Dinheiro', fatura: 'Fatura do cartão' };
@@ -224,6 +224,7 @@ function upsert_(sh, r) {
   // parcela "5/10" (texto, para a planilha não virar data) e o id que liga as parcelas da mesma compra
   const parcela = /^\d{1,2}\/\d{1,2}$/.test(String(r.parcela || '')) ? "'" + r.parcela : '';
   const grupo = String(r.grupo || '').slice(0, 40);
+  const serie = String(r.serie || '').slice(0, 40); // id da série de uma conta que repete todo mês
 
   if (!id) throw new Error('ID ausente');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) throw new Error('Data inválida');
@@ -244,10 +245,10 @@ function upsert_(sh, r) {
   const row = findRow_(sh, id);
   if (row > 0) {
     sh.getRange(row, 2, 1, values.length).setValues([values]);
-    sh.getRange(row, COL_SITUACAO, 1, 7).setValues([[situacao, avisos, forma, safe_(cartao), fatura, parcela, grupo]]);
+    sh.getRange(row, COL_SITUACAO, 1, 8).setValues([[situacao, avisos, forma, safe_(cartao), fatura, parcela, grupo, serie]]);
     return { id: id, updated: true };
   }
-  sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([[id].concat(values, [new Date(), situacao, avisos, forma, safe_(cartao), fatura, parcela, grupo])]);
+  sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([[id].concat(values, [new Date(), situacao, avisos, forma, safe_(cartao), fatura, parcela, grupo, serie])]);
   return { id: id, created: true };
 }
 
@@ -297,7 +298,8 @@ function list_(sh) {
       cartao: String(row[10] || ''),
       fatura: row[11] instanceof Date ? Utilities.formatDate(row[11], tz, 'yyyy-MM-dd') : '',
       parcela: String(row[12] || '').replace(/^'/, ''),
-      grupo: String(row[13] || '')
+      grupo: String(row[13] || ''),
+      serie: String(row[14] || '')
     });
   });
   return out;

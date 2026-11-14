@@ -347,6 +347,11 @@ body.form-mode .toast{bottom:24px}
   <!-- ============ NOVO REGISTRO ============ -->
   <section class="screen" id="screen-form" aria-label="Novo registro">
     <form id="form" class="card" novalidate autocomplete="off">
+      <div class="field hidden" id="f-rec-wrap">
+        <span class="lbl">Recentes</span>
+        <div class="chips" id="f-recentes"></div>
+      </div>
+
       <div class="field">
         <label class="lbl" for="f-data">Data</label>
         <input class="input" type="date" id="f-data" required>
@@ -402,6 +407,14 @@ body.form-mode .toast{bottom:24px}
       <div class="field">
         <label class="lbl" for="f-valor" id="lbl-valor">Valor</label>
         <input class="input valor num" id="f-valor" inputmode="numeric" placeholder="R$ 0,00" value="">
+      </div>
+
+      <!-- conta que repete todo mês -->
+      <div class="field" id="f-rep-wrap">
+        <label class="aviso-check" for="f-rep">
+          <input type="checkbox" id="f-rep">
+          <span class="t"><b>🔁 Repete todo mês</b><span id="f-rep-resumo">Não repete</span></span>
+        </label>
       </div>
 
       <!-- compra parcelada no crédito (só ao cadastrar) -->
@@ -734,7 +747,7 @@ const fmtAviso = at => {
 };
 
 /* ================= versão do script ================= */
-const SCRIPT_MIN = 5;      // versão mínima do Code.gs que este app precisa
+const SCRIPT_MIN = 6;      // versão mínima do Code.gs que este app precisa
 let scriptVersao = null;   // null = ainda não sabemos
 function setScriptVersao(v){ scriptVersao = Number(v) || 1; renderScriptWarn(); } // scripts antigos não mandam versão
 function renderScriptWarn(){
@@ -781,6 +794,8 @@ async function sync({ silent } = {}){
     if (data.user) { session.nome = data.user.nome; store.set(K.sess, session); }
     saveRecords();
     render();
+    // contas que repetem e faturas que fecharam: cria o que faltar e envia
+    if (runAuto()) { render(); flush().then(render).catch(() => {}); }
     if (!silent) toast('Atualizado');
   } catch (e) {
     if (e instanceof AuthError) toast(e.message);
@@ -835,6 +850,53 @@ function flush(){
   })());
 }
 
+/* ================= AUTOMÁTICOS ================= */
+// Ids previsíveis: se dois aparelhos criarem a mesma coisa, a planilha só atualiza a mesma linha.
+function runAuto(){
+  if (!session || !(scriptVersao >= 6)) return 0;
+  const all = allRecords(), today = todayISO();
+  let n = 0;
+
+  // 1) contas que repetem: sempre existe a próxima ocorrência depois de hoje
+  const ultimas = new Map();
+  all.filter(r => r.serie).forEach(r => { const u = ultimas.get(r.serie); if (!u || r.data > u.data) ultimas.set(r.serie, r); });
+  ultimas.forEach(last => {
+    const { _pending, ...o } = last;
+    let atual = o;
+    for (let k = 1; k <= 3 && atual.data <= today; k++) {       // no máximo 3 meses de atraso
+      const data = addMonthsISO(o.data, k), id = `${o.serie}-${data.slice(0, 7)}`;
+      if (all.some(r => r.id === id)) break;
+      const nx = { ...o, id, data, situacao: o.forma === 'credito' ? 'pago' : 'pendente', parcela:'', grupo:'' };
+      nx.fatura = nx.forma === 'credito' ? vencimentoFatura(nx) : '';
+      enqueue('add', nx); n++; atual = nx;
+    }
+  });
+
+  // 2) fatura fechada e ainda não vencida: cria o "A pagar" com o total (e acompanha o total enquanto não for paga).
+  //    Faturas que já venceram ficam com o botão "Lançar pagamento" (provavelmente já foram pagas por fora).
+  cartoes.forEach(c => {
+    const porFatura = new Map();
+    all.filter(r => r.forma === 'credito' && norm(r.cartao) === norm(c.nome)).forEach(r => {
+      const f = faturaDe(c, r.data); if (!porFatura.has(f.vence)) porFatura.set(f.vence, { ...f, total:0 }); porFatura.get(f.vence).total += +r.valor; });
+    porFatura.forEach(f => {
+      if (f.fecha > today || f.total <= 0) return;
+      const total = Math.round(f.total * 100) / 100;
+      const pg = pagamentoDaFatura(all, c.nome, f.vence);
+      if (!pg) {
+        if (f.vence < today) return;
+        const [vy, vm] = f.vence.split('-').map(Number);
+        const mes = new Date(vy, vm - 1, 1).toLocaleDateString('pt-BR', { month:'short', year:'numeric' }).replace('.', '');
+        enqueue('add', { id: `fat-${c.id}-${f.vence}`, data: f.vence, tipo:'pagamento', situacao:'pendente', avisos:[], forma:'fatura', cartao: c.nome,
+          descricao: `Fatura ${c.nome} (${mes})`, categoria:'Cartão de crédito', valor: total, fatura:'', parcela:'', grupo:'', serie:'' });
+        n++;
+      } else if (String(pg.id).startsWith('fat-') && isPend(pg) && Math.abs(+pg.valor - total) > 0.004) {
+        const { _pending, ...o } = pg; enqueue('update', { ...o, valor: total }); n++;
+      }
+    });
+  });
+  return n;
+}
+
 /* ================= HOME ================= */
 const IC_IN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17M15 17H7V9"/></svg>';
 const IC_OUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>';
@@ -843,7 +905,7 @@ const IC_CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="curre
 function allRecords(){ return applyOps(records, myQueue(), true); }
 function findRecord(id){ return allRecords().find(r => r.id === id); }
 // parcelas de meses que ainda não chegaram ficam só na planilha, nas faturas e na tela de Parcelas
-const isFutureParcel = r => !!r.grupo && r.data > todayISO();
+const isFutureParcel = r => (!!r.grupo || (!!r.serie && r.forma === 'credito')) && r.data > todayISO();
 const visibleRecords = all => all.filter(r => !isFutureParcel(r));
 const addMonthsISO = (iso, n) => { const [y, m, d] = iso.split('-').map(Number); const t = new Date(y, m - 1 + n, 1);
   const ty = t.getFullYear(), tm = t.getMonth() + 1; return isoOf(ty, tm, clampDay(ty, tm, d)); };
@@ -1172,7 +1234,7 @@ function rowHtml(r, { due, today }){
     <span class="badge ${inn ? 'in' : 'out'}" title="${inn ? 'Recebimento' : 'Pagamento'}">${inn ? IC_IN : IC_OUT}</span>
     <div class="row-mid">
       <div class="row-desc">${mdToHtml(r.descricao || '')}</div>
-      <div class="row-meta"><span class="num">${fmtDay(r.data)}</span>${pend ? dueChip(r, today) : ''}${bellChip(r)}${formaChip(r)}${r.categoria ? `<span class="chip">${esc(r.categoria)}</span>` : ''}${r._pending ? '<span class="pending">● aguardando envio</span>' : ''}</div>
+      <div class="row-meta"><span class="num">${fmtDay(r.data)}</span>${pend ? dueChip(r, today) : ''}${bellChip(r)}${formaChip(r)}${r.serie ? '<span class="chip forma">🔁 mensal</span>' : ''}${r.categoria ? `<span class="chip">${esc(r.categoria)}</span>` : ''}${r._pending ? '<span class="pending">● aguardando envio</span>' : ''}</div>
     </div>
     <div class="row-right">
       <span class="row-val num ${inn ? 'pos' : 'neg'}">${inn ? '+' : '−'}${brl.format(+r.valor)}</span>
@@ -1229,6 +1291,7 @@ function onListKey(e){
 const fData = $('#f-data'), fValor = $('#f-valor'), fDesc = $('#f-desc'), fCat = $('#f-cat'), catList = $('#cat-list');
 let cents = 0, editingId = null, sitTouched = false, formAvisos = [], origAvisos, formForma = '', formCartao = '';
 let parc = { on:false, n:2, ini:1, vals:[], showAll:false }, origRec = null; // parcelamento do formulário
+let formRep = false, recentesList = [];
 
 function resetForm(){
   fData.value = todayISO();
@@ -1249,6 +1312,7 @@ function resetForm(){
   $('#btn-delete').classList.add('hidden');
   disarmDelete();
   parc = { on:false, n:2, ini:1, vals:[], showAll:false }; origRec = null;
+  formRep = false; renderRecentes();
   $('#f-parc-n').value = 2; $('#f-parc-ini').value = 1;
   updateParcField();
 }
@@ -1270,6 +1334,7 @@ function fillForm(r){
   updateAvisoField();
   $('#btn-delete').classList.remove('hidden');
   origRec = r;
+  formRep = !!r.serie; $('#f-rec-wrap').classList.add('hidden');
   updateParcField();
 }
 
@@ -1419,7 +1484,39 @@ function updateParcField(){
   if (r) $('#f-parc-info-txt').innerHTML = `Parcela <b>${esc(r.parcela)}</b> de uma compra parcelada. Descrição, categoria e cartão mudam em todas as parcelas; data e valor, só nesta.`;
   $('#lbl-valor').textContent = parc.on ? 'Valor total da compra' : r ? 'Valor desta parcela' : 'Valor';
   $('#btn-delete').textContent = r ? 'Excluir só esta parcela' : 'Excluir registro';
+  updateRepField();
 }
+function updateRepField(){
+  const vis = !parc.on && !(origRec && origRec.grupo);
+  $('#f-rep-wrap').classList.toggle('hidden', !vis);
+  $('#f-rep').checked = formRep;
+  const inn = $('#t-in').checked, cred = formForma === 'credito';
+  $('#f-rep-resumo').textContent = !formRep ? 'Não repete'
+    : cred ? 'Lança no cartão no mesmo dia do mês seguinte, com este valor'
+    : `O próximo é criado como "${inn ? 'A receber' : 'A pagar'}" no mês seguinte, com este valor (você ajusta quando a conta chegar)`;
+}
+$('#f-rep').addEventListener('change', e => { formRep = e.target.checked; updateRepField(); });
+
+// ---- recentes: as últimas descrições usadas, para preencher o resto com um toque
+function renderRecentes(){
+  const vis = visibleRecords(allRecords()).filter(r => r.forma !== 'fatura' && r.descricao)
+    .sort((a, b) => b.data.localeCompare(a.data));
+  const vistos = new Set(); recentesList = [];
+  for (const r of vis) { const k = norm(String(r.descricao).replace(/[*_]/g, '')); if (vistos.has(k)) continue; vistos.add(k); recentesList.push(r); if (recentesList.length >= 8) break; }
+  $('#f-rec-wrap').classList.toggle('hidden', !recentesList.length);
+  $('#f-recentes').innerHTML = recentesList.map((r, i) => `<button type="button" data-rec="${i}">${esc(String(r.descricao).replace(/[*_]/g, '').slice(0, 24))}</button>`).join('');
+}
+$('#f-recentes').addEventListener('click', e => {
+  const b = e.target.closest('[data-rec]'); if (!b) return;
+  const r = recentesList[+b.dataset.rec]; if (!r) return;
+  (r.tipo === 'recebimento' ? $('#t-in') : $('#t-out')).checked = true;
+  fDesc.innerHTML = mdToHtml(r.descricao || '');
+  fCat.value = r.categoria || '';
+  formForma = r.forma || ''; formCartao = r.cartao || '';
+  document.querySelectorAll('#f-recentes button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  updateSitLabels(); updateFormaField(); updateAvisoField(); updateParcField();
+  fValor.focus();
+});
 $('#f-parc').addEventListener('change', e => {
   parc.on = e.target.checked;
   if (parc.on) { parc.n = Math.max(2, +$('#f-parc-n').value || 2); parc.ini = 1; $('#f-parc-ini').value = 1; splitParcelas(); }
@@ -1556,6 +1653,8 @@ $('#form').addEventListener('submit', async e => {
   rec.fatura = credito ? vencimentoFatura(rec) : '';
   rec.parcela = isEdit && origRec ? (origRec.parcela || '') : '';
   rec.grupo = isEdit && origRec ? (origRec.grupo || '') : '';
+  const serieAntiga = isEdit && origRec ? (origRec.serie || '') : '';
+  rec.serie = formRep && !parc.on ? (serieAntiga || uid()) : '';
   if (!isEdit) { store.set('contas.ultimaForma', formForma); if (usaCartao) store.set('contas.ultimoCartao', formCartao); }
 
   if (!isEdit && parc.on && credito) {
@@ -1563,11 +1662,11 @@ $('#form').addEventListener('submit', async e => {
     if (parc.vals.some(v => v <= 0)) return toast('Todas as parcelas precisam de valor');
     const grupo = uid(), datas = parcDatas();
     parc.vals.forEach((v, i) => {
-      const p = { ...rec, id: uid(), data: datas[i], valor: v / 100, parcela: `${parc.ini + i}/${parc.n}`, grupo };
+      const p = { ...rec, id: uid(), data: datas[i], valor: v / 100, parcela: `${parc.ini + i}/${parc.n}`, grupo, serie:'' };
       p.fatura = vencimentoFatura(p);
       enqueue('add', p);
     });
-    render(); back();
+    runAuto(); render(); back();
     return sendNow(`Compra parcelada salva (${parc.vals.length} parcelas) ✓`);
   }
 
@@ -1582,9 +1681,21 @@ $('#form').addEventListener('submit', async e => {
       enqueue('update', up);
     });
   }
+  // parou de repetir: apaga as próximas ocorrências criadas pelo app e desliga a série nas anteriores
+  let parou = false;
+  if (serieAntiga && !rec.serie) {
+    parou = true;
+    allRecords().filter(r => r.serie === serieAntiga && r.id !== rec.id).forEach(r => {
+      const { _pending, ...o } = r;
+      if (r.data > rec.data && (isPend(r) || r.data > todayISO())) enqueue('delete', { id: r.id });
+      else enqueue('update', { ...o, serie:'' });
+    });
+  }
+  const criouProximo = rec.serie && rec.data <= todayISO() && runAuto() > 0;
+  if (!criouProximo) runAuto();
   render();
   back();
-  sendNow(isEdit ? 'Alteração salva na planilha ✓' : 'Salvo na planilha ✓');
+  sendNow(parou ? 'Parou de repetir ✓' : criouProximo ? 'Salvo · o próximo mês já foi criado ✓' : isEdit ? 'Alteração salva na planilha ✓' : 'Salvo na planilha ✓');
 });
 
 async function sendNow(okMsg){
@@ -1848,6 +1959,7 @@ $('#btn-flush').addEventListener('click', async () => {
 });
 
 function applyPrefill(p){
+  $('#f-rec-wrap').classList.add('hidden');
   fData.value = p.data;
   (p.tipo === 'recebimento' ? $('#t-in') : $('#t-out')).checked = true;
   cents = Math.round(p.valor * 100); fValor.value = cents ? brl.format(cents / 100) : '';
